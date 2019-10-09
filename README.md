@@ -1,4 +1,4 @@
-# Molkky
+# Mölkky
 Baxter Robot plays [Molkky](https://en.wikipedia.org/wiki/Mölkky), a Finnish lawn game. Berkeley EECS 106A Project Fall 2019
 We are modifying the game to scaled down foam pieces and play indoors on a table top. 
 
@@ -30,3 +30,7 @@ We are modifying the game to scaled down foam pieces and play indoors on a table
 #### Additional Reach Goals:
 - Have Baxter able to reset pins
 - Baxter can reload his toss pin
+
+# Getting Started
+- Clone Repo
+- Run Launch File
