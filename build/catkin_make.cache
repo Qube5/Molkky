@@ -1,0 +1,2 @@
+molkky
+-DCATKIN_DEVEL_PREFIX=/home/cc/ee106a/fa19/class/ee106a-acz/ros_workspaces/Molkky/devel -DCMAKE_INSTALL_PREFIX=/home/cc/ee106a/fa19/class/ee106a-acz/ros_workspaces/Molkky/install -G Unix Makefiles

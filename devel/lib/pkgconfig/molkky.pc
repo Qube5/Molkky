@@ -1,0 +1,8 @@
+prefix=/home/cc/ee106a/fa19/class/ee106a-acz/ros_workspaces/Molkky/devel
+
+Name: molkky
+Description: Description of molkky
+Version: 0.0.0
+Cflags: 
+Libs: -L/home/cc/ee106a/fa19/class/ee106a-acz/ros_workspaces/Molkky/devel/lib 
+Requires: 
