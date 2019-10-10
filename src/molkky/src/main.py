@@ -54,7 +54,7 @@ def update_score(curr_score, points_gained):
 def get_best_expected_move(board_state):
     return None
 
-def baxter_make_move(board_state):
+def baxter_make_move(move):
     return None
 
 def play_game(num_players, robot_turn):
