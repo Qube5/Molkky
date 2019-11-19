@@ -11,3 +11,8 @@ def get_new_board_state():
       ])
       print("Process board_state and try to make it into some sort of file type")
       return board_state
+
+def read_board():
+    board = [[0 for _ in range(n)] for _ in range(n)]
+    # use vision to determine placement of pins in grid
+    return board
