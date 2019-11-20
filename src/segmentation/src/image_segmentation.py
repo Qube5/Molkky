@@ -221,6 +221,10 @@ def cluster_segment(img, n_clusters, random_state=0):
     # print(kmeans)
     # get the labeled cluster image using kmeans.labels_
     clusters = kmeans.labels_
+    ### CHECK CLUSTER MEANS!! ###
+    ### PUBLISH KMEANS IMAGE ###
+
+
     # print(clusters.shape)
     # reshape this clustered image to the original downsampled image (img_d) shape
     cluster_img = clusters.reshape(img_d.shape[0], img_d.shape[1])
@@ -249,6 +253,20 @@ def segment_image(img):
     # binary = cluster_segment(img, 2).astype(np.uint8) / 255
     # if np.mean(binary) > 0.5:
     #     binary = 1 - binary #invert the pixels if K-Means assigned 1's to background, and 0's to foreground
+
+    return binary
+
+def segment_image2(img):
+    # ONLY USE ONE THRESHOLDING METHOD
+
+
+    # perform clustering segmentation (make image binary)
+    binary = cluster_segment(img, 3).astype(np.uint8) / 255
+
+    ## Instead of this, iterate over clusters and assign background to be 
+    ## cluster with most pixels assigned, assign 1 to all others
+    if np.mean(binary) > 0.5:
+        binary = 1 - binary #invert the pixels if K-Means assigned 1's to background, and 0's to foreground
 
     return binary
 

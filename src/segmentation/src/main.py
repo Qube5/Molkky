@@ -27,7 +27,7 @@ import cv2
 
 from cv_bridge import CvBridge
 
-from image_segmentation import segment_image
+from image_segmentation import segment_image, segment_image2
 from pointcloud_segmentation import segment_pointcloud
 
 
@@ -39,13 +39,16 @@ def get_camera_matrix(camera_info_msg):
     return K
 
 def isolate_object_of_interest(points, image, cam_matrix, trans, rot):
-    segmented_image = segment_image(image)
+    segmented_image = segment_image2(image)
     points = segment_pointcloud(points, segmented_image, cam_matrix, trans, rot)
-    return points
+    return points, segmented_image
 
 def numpy_to_pc2_msg(points):
     return ros_numpy.msgify(PointCloud2, points, stamp=rospy.Time.now(),
         frame_id='camera_depth_optical_frame')
+
+def numpy_to_img_msg(img):
+    return ros_numpy.msgify(Image, img, encoding = 'mono8')
 
 class PointcloudProcess:
     """
@@ -100,10 +103,12 @@ class PointcloudProcess:
                     tf.ConnectivityException,
                     tf.ExtrapolationException):
                 return
-            points = isolate_object_of_interest(points, image, info,
+            points, seg_img = isolate_object_of_interest(points, image, info,
                 np.array(trans), np.array(rot))
             points_msg = numpy_to_pc2_msg(points)
+            seg_img_msg = numpy_to_img_msg(seg_img)
             self.points_pub.publish(points_msg)
+            self.image_pub.publish(seg_img_msg)
             print("Published segmented pointcloud at timestamp:",
                    points_msg.header.stamp.secs)
 
