@@ -1,3 +1,5 @@
+Skip to the exciting stuff: [src/molkky/src](https://github.com/Qube5/Molkky/tree/master/src/molkky/src)
+
 # Mölkky
 Baxter Robot plays [Molkky](https://en.wikipedia.org/wiki/Mölkky), a Finnish lawn game. Berkeley EECS 106A Project Fall 2019
 We are modifying the game to scaled down foam pieces and play indoors on a table top. 

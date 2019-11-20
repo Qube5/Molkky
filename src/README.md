@@ -7,3 +7,5 @@ Currently has following dependencies
 - std_msgs 
 - geometry_msgs 
 - sensor_msgs
+
+Note that other packages in here are not necessarily used but are in here as examples
