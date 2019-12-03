@@ -19,6 +19,7 @@ import rospy
 import message_filters
 import ros_numpy
 import tf
+from scipy import stats
 
 from sensor_msgs.msg import Image, CameraInfo, PointCloud2
 
@@ -30,6 +31,7 @@ from cv_bridge import CvBridge
 from image_segmentation import segment_image, segment_image2
 from pointcloud_segmentation import segment_pointcloud
 
+num_pins = 2
 
 def get_camera_matrix(camera_info_msg):
     # TODO: Return the camera intrinsic matrix as a 3x3 numpy array
@@ -38,9 +40,14 @@ def get_camera_matrix(camera_info_msg):
     K = np.reshape(np.array(camera_info_msg.K), (3,3))
     return K
 
+def segmented_image_to_binary(segmented_image):
+    binary = np.where(segmented_image != 0, 1, segmented_image)
+    return binary
+
 def isolate_object_of_interest(points, image, cam_matrix, trans, rot):
-    segmented_image = segment_image2(image)
-    points = segment_pointcloud(points, segmented_image, cam_matrix, trans, rot)
+    segmented_image, info = segment_image2(image, num_pins + 1)
+    segmented_image_binary = segmented_image_to_binary(segmented_image)
+    points = segment_pointcloud(points, segmented_image_binary, cam_matrix, trans, rot)
     return points, segmented_image
 
 def numpy_to_pc2_msg(points):
@@ -48,7 +55,10 @@ def numpy_to_pc2_msg(points):
         frame_id='camera_depth_optical_frame')
 
 def numpy_to_img_msg(img):
+    # print(img.shape)
+    # print(np.array([img, img, img]).shape)
     return ros_numpy.msgify(Image, img, encoding = 'mono8')
+    # return ros_numpy.msgify(Image, np.array([img, img, img]).reshape(480, 640, 3), encoding = 'rgb8')
 
 class PointcloudProcess:
     """
