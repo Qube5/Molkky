@@ -205,33 +205,52 @@ def cluster_segment(img, n_clusters, random_state=0):
     # Remove this line when you implement this function.
     # raise NotImplementedError()
 
+    # Do this only if clustering in HSV space isbetter
+    # img = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+
+
     # Downsample img first using the mean to speed up K-means
     img_d = block_reduce(img, block_size=(2, 2, 1), func=np.mean)
+
+
+
+
+
 
     # TODO: Generate a clustered image using K-means
 
     # first convert our 3-dimensional img_d array to a 2-dimensional array
     # whose shape will be (length * width, number of channels) hint: use img_d.shape
-    img_r = img_d.reshape(img_d.shape[0]*img_d.shape[1], img_d.shape[2])
+    img_r = img_d.reshape((img_d.shape[0]*img_d.shape[1], img_d.shape[2]))
     # print(img_r.shape)
 
     # fit the k-means algorithm on this reshaped array img_r using the
     # the scikit-learn k-means class and fit function
     # see https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
     # the only parameters you have to worry about are n_clusters and random_state
-    kmeans = KMeans(n_clusters, random_state=random_state).fit(img_r)
+    # print("channels",img_d.shape[2])
+    kmeans = KMeans(n_clusters, random_state=random_state).fit(img_r)#[:,:3].reshape((img_d.shape[0]*img_d.shape[1], 2)))
     # print(kmeans)
     # get the labeled cluster image using kmeans.labels_
-    clusters = kmeans.labels_
-
+    clusters = kmeans.labels_  
+    # print(len(set(clusters)))
     ### CHECK CLUSTER MEANS!! ###
     ### PUBLISH KMEANS IMAGE ###
 
     # reshape this clustered image to the original downsampled image (img_d) shape
-    cluster_img = clusters.reshape(img_d.shape[0], img_d.shape[1])
+    cluster_img = clusters.reshape((img_d.shape[0], img_d.shape[1]))
+    # cluster_img = clusters.reshape(img_d.shape)
+    # img_u = cluster_img
+
+
 
     # Upsample the image back to the original image (img) using nearest interpolation
     img_u = mc.imresize(cluster_img, (img.shape[0], img.shape[1]), interp='nearest')
+    print(len(set(img_u.ravel())))
+
+    # Do this only if clustering in HSV space
+    # img_u = cv2.cvtColor(img_u, cv2.COLOR_HSV2RGB)
+
 
     ## GET Cluster colors
     cluster_vals = list(set(img_u.ravel()))
@@ -243,7 +262,7 @@ def cluster_segment(img, n_clusters, random_state=0):
         val = cluster_vals[i]
         color = kmeans.cluster_centers_[i]
         cluster_colors[val] = color
-    # print(cluster_colors)
+    print(cluster_colors)
 
     ## MAKE background color always 0
     background = stats.mode(img_u, axis = None)[0][0]
@@ -393,8 +412,8 @@ def test_cluster_helper(img_names):
     # n_clusters = [2, 3, 5]
     n_clusters = [
         # 2, 
-        3, 
-        # 5
+        # 3, 
+        5
     ]
     for img_name in img_names:
         test_img_color = read_image(img_name)
@@ -405,8 +424,8 @@ if __name__ == '__main__':
     # adjust the file names here
     img_names = [
         # IMG_DIR + '/lego.jpg',
-        IMG_DIR + '/staples.jpg',
-        # IMG_DIR + '/legos.jpg'
+        # IMG_DIR + '/staples.jpg',
+        IMG_DIR + '/legos.jpg'
     ]
     # print(img_names)
     # uncomment the test you want to run

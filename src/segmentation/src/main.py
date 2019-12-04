@@ -33,6 +33,7 @@ from pointcloud_segmentation import segment_pointcloud
 
 num_pins = 2
 
+
 def get_camera_matrix(camera_info_msg):
     # TODO: Return the camera intrinsic matrix as a 3x3 numpy array
     # by retreiving information from the CameraInfo ROS message.
