@@ -20,6 +20,8 @@ import matplotlib.pyplot as plt
 
 from scipy import ndimage
 import scipy.misc as mc
+from scipy import stats
+
 # from scipy.misc import imresize
 from skimage import filters
 from sklearn.cluster import KMeans
@@ -203,36 +205,122 @@ def cluster_segment(img, n_clusters, random_state=0):
     # Remove this line when you implement this function.
     # raise NotImplementedError()
 
+    # Do this only if clustering in HSV space isbetter
+    # img = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
+
+
     # Downsample img first using the mean to speed up K-means
     img_d = block_reduce(img, block_size=(2, 2, 1), func=np.mean)
+
+
+
+
+
 
     # TODO: Generate a clustered image using K-means
 
     # first convert our 3-dimensional img_d array to a 2-dimensional array
     # whose shape will be (length * width, number of channels) hint: use img_d.shape
-    img_r = img_d.reshape(img_d.shape[0]*img_d.shape[1], img_d.shape[2])
+    img_r = img_d.reshape((img_d.shape[0]*img_d.shape[1], img_d.shape[2]))
     # print(img_r.shape)
 
     # fit the k-means algorithm on this reshaped array img_r using the
     # the scikit-learn k-means class and fit function
     # see https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html
     # the only parameters you have to worry about are n_clusters and random_state
-    kmeans = KMeans(n_clusters, random_state=random_state).fit(img_r)
+    # print("channels",img_d.shape[2])
+    kmeans = KMeans(n_clusters, random_state=random_state).fit(img_r)#[:,:3].reshape((img_d.shape[0]*img_d.shape[1], 2)))
     # print(kmeans)
     # get the labeled cluster image using kmeans.labels_
-    clusters = kmeans.labels_
+    clusters = kmeans.labels_  
+    # print(len(set(clusters)))
     ### CHECK CLUSTER MEANS!! ###
     ### PUBLISH KMEANS IMAGE ###
 
-
-    # print(clusters.shape)
     # reshape this clustered image to the original downsampled image (img_d) shape
-    cluster_img = clusters.reshape(img_d.shape[0], img_d.shape[1])
+    cluster_img = clusters.reshape((img_d.shape[0], img_d.shape[1]))
+    # cluster_img = clusters.reshape(img_d.shape)
+    # img_u = cluster_img
+
+
 
     # Upsample the image back to the original image (img) using nearest interpolation
     img_u = mc.imresize(cluster_img, (img.shape[0], img.shape[1]), interp='nearest')
+    print(len(set(img_u.ravel())))
 
-    return img_u.astype(np.uint8)
+    # Do this only if clustering in HSV space
+    # img_u = cv2.cvtColor(img_u, cv2.COLOR_HSV2RGB)
+
+
+    ## GET Cluster colors
+    cluster_vals = list(set(img_u.ravel()))
+    cluster_vals.sort()
+    # print(cluster_vals)
+
+    cluster_colors = {}
+    for i in range(len(cluster_vals)):
+        val = cluster_vals[i]
+        color = kmeans.cluster_centers_[i]
+        cluster_colors[val] = color
+    print(cluster_colors)
+
+    ## MAKE background color always 0
+    background = stats.mode(img_u, axis = None)[0][0]
+    if background != 0:
+        img_u = np.where(img_u == background, 256, img_u)
+        img_u = np.where(img_u == 0, background, img_u)
+        img_u = np.where(img_u == 256, 0, img_u)
+        temp = cluster_colors[0]
+        cluster_colors[0] = cluster_colors[background]
+        cluster_colors[background] = temp
+
+    ## GET CONTOURS
+    # # font = cv2.FONT_HERSHEY_COMPLEX
+    # _, contours, _ = cv2.findContours(img_u, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    # # _, contours, _ = cv2.findContours(img_u, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+    # print(len(contours))
+    # centers = []
+    # for cnt in contours:
+    #     # approx = cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt, True), True)
+    #     # reduces edges. bigger multiplier yields fewer edges
+    #     approx = cv2.approxPolyDP(cnt, 0.02*cv2.arcLength(cnt, True), True)
+    #     # print(approx)
+    #     # print(len(approx))
+    #     # cv2.drawContours(img_u, [approx], 0, (200), 5)
+    #     # x = approx.ravel()[0]
+    #     # y = approx.ravel()[1]
+
+    #     if len(approx) == 4:
+    #         print("rectangle")
+    #         centers.append(np.mean(approx, axis = 0))
+    #         cv2.drawContours(img_u, [approx], 0, (200), 5) #for debugging. remove later
+    #         # cv2.putText(img_u, "Rectangle", (x, y), font, 1, (0))
+    #     # else:
+    #     #     cv2.drawContours(img_u, [approx], 0, (100), 5)
+
+    #         # cv2.putText(img_u, "not a rectangle", (x, y), font, 1, (0))
+    #     # break 
+
+    ## GET PIXEL CENTERS of each cluster
+    cluster_pixels = {}
+    for y in range(len(img_u)):
+        for x in range(len(img_u[0])):
+            pixel = img_u[y][x]
+            if pixel != 0:
+                if not pixel in cluster_pixels.keys():
+                    cluster_pixels[pixel] = []
+                cluster_pixels[pixel].append([x, y])
+    # print(cluster_pixels)
+
+    centers = {}
+    for key in cluster_pixels.keys():
+        points = np.array(cluster_pixels[key])
+        center = np.mean(points, axis = 0)
+        centers[key] = center
+
+    info = {"cluster_centers": centers, "cluster_colors": cluster_colors}
+
+    return img_u.astype(np.uint8), info
 
 def to_grayscale(rgb_img):
     return np.dot(rgb_img[... , :3] , [0.299 , 0.587, 0.114])
@@ -256,19 +344,21 @@ def segment_image(img):
 
     return binary
 
-def segment_image2(img):
+def segment_image2(img, num_clusters):
     # ONLY USE ONE THRESHOLDING METHOD
 
 
     # perform clustering segmentation (make image binary)
-    binary = cluster_segment(img, 3).astype(np.uint8) / 255
+    # binary = cluster_segment(img, 3).astype(np.uint8) / 255
+    binary, info = cluster_segment(img, num_clusters)
+    binary = binary.astype(np.uint8)
 
     ## Instead of this, iterate over clusters and assign background to be 
     ## cluster with most pixels assigned, assign 1 to all others
-    if np.mean(binary) > 0.5:
-        binary = 1 - binary #invert the pixels if K-Means assigned 1's to background, and 0's to foreground
+    # if np.mean(binary) > 0.5:
+    #     binary = 1 - binary #invert the pixels if K-Means assigned 1's to background, and 0's to foreground
 
-    return binary
+    return binary, info
 
 """
 below are tests used for sanity checking you image, edit as you see appropriate
@@ -291,7 +381,8 @@ def test_edge_canny(img):
     cv2.imwrite(IMG_DIR + "/edges_canny.jpg", edges)
 
 def test_cluster(img, n_clusters):
-    clusters = cluster_segment(img, n_clusters).astype(np.uint8)
+    clusters, info = cluster_segment(img, n_clusters)
+    clusters = clusters.astype(np.uint8)
 
     cv2.imwrite(IMG_DIR + "/cluster.jpg", clusters)
     clusters = cv2.imread(IMG_DIR + '/cluster.jpg')
@@ -318,7 +409,12 @@ def test_edge_canny_helper(img_names):
 
 def test_cluster_helper(img_names):
     index = 0
-    n_clusters = [2, 3, 5]
+    # n_clusters = [2, 3, 5]
+    n_clusters = [
+        # 2, 
+        # 3, 
+        5
+    ]
     for img_name in img_names:
         test_img_color = read_image(img_name)
         test_cluster(test_img_color, n_clusters[index])
@@ -327,18 +423,19 @@ def test_cluster_helper(img_names):
 if __name__ == '__main__':
     # adjust the file names here
     img_names = [
-        IMG_DIR + '/lego.jpg',
-        IMG_DIR + '/staples.jpg',
+        # IMG_DIR + '/lego.jpg',
+        # IMG_DIR + '/staples.jpg',
         IMG_DIR + '/legos.jpg'
     ]
+    # print(img_names)
     # uncomment the test you want to run
     # test_img_color = read_image(img_name)
 
     # it will plot the image and also save it
-    test_thresh_naive_helper(img_names)
+    # test_thresh_naive_helper(img_names)
     # test_edge_naive_helper(img_names)
     # test_edge_canny_helper(img_names)
-    # test_cluster_helper(img_names)
+    test_cluster_helper(img_names)
 
     # test_edge_naive(test_img)
     # test_edge_canny(test_img)
