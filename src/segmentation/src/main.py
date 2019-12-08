@@ -49,7 +49,7 @@ def isolate_object_of_interest(points, image, cam_matrix, trans, rot):
     segmented_image, info = segment_image2(image, num_pins + 1)
     segmented_image_binary = segmented_image_to_binary(segmented_image)
     points = segment_pointcloud(points, segmented_image_binary, cam_matrix, trans, rot)
-    return points, segmented_image
+    return points, segmented_image, info
 
 def numpy_to_pc2_msg(points):
     return ros_numpy.msgify(PointCloud2, points, stamp=rospy.Time.now(),
@@ -85,6 +85,7 @@ class PointcloudProcess:
 
         self.points_pub = rospy.Publisher(points_pub_topic, PointCloud2, queue_size=10)
         self.image_pub = rospy.Publisher('segmented_image', Image, queue_size=10)
+        # self.image_info = rospy.Publisher('image_info', Image, queue_size=10)
 
         ts = message_filters.ApproximateTimeSynchronizer([points_sub, image_sub, caminfo_sub],
                                                           10, 0.1, allow_headerless=True)
@@ -114,12 +115,13 @@ class PointcloudProcess:
                     tf.ConnectivityException,
                     tf.ExtrapolationException):
                 return
-            points, seg_img = isolate_object_of_interest(points, image, info,
+            points, seg_img, info = isolate_object_of_interest(points, image, info,
                 np.array(trans), np.array(rot))
             points_msg = numpy_to_pc2_msg(points)
             seg_img_msg = numpy_to_img_msg(seg_img)
             self.points_pub.publish(points_msg)
             self.image_pub.publish(seg_img_msg)
+            # self.image_info.publish(info)
             print("Published segmented pointcloud at timestamp:",
                    points_msg.header.stamp.secs)
 

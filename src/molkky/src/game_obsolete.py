@@ -11,7 +11,7 @@ def numpy_to_move_msg(move):
     # print(np.array([img, img, img]).shape)
     return ros_numpy.msgify(String, move)
 
-# def
+def
 
 class Game:
     def __init__(self, num_players, robot_turn):
@@ -20,12 +20,13 @@ class Game:
         self.robot_turn = robot_turn
         self.turn = 0
         self.state = GameState(num_players, robot_turn, initial_board_state)
-        self.prev_board_state = None # self.get_new_board_state()
+        self.prev_board_state = None #self.get_new_board_state()
 
         self.current_image_info = None
 
         # info_sub = message_filters.Subscriber(points_sub_topic, PointCloud2)
         # rospy.Subscriber("image_info", String, self.info_callback)
+
         # self.move_pub = rospy.Publisher("points_pub_topic", String, queue_size=10)
 
     def info_callback(self, image_info):
@@ -140,6 +141,19 @@ class Game:
 
         score = color_points[closest_color]
         return score
+        # TODO
+        # pins = [False] * 13
+        # score = 0
+        # for i in range(len(board)):
+        #     for j in range(len(board)):
+        #         pins[board[i][j]] = True
+        # num_pins = pins[1:].count(False)
+        # if (num_pins == 1):
+        #     score = pins.index(False)
+        # else:
+        #     score = pins[1:].count(False)
+        score = 0
+        return score
 
     def get_new_board_state(self):
         if not self.current_image_info:
@@ -148,7 +162,14 @@ class Game:
         # else process self.current_image_info into a board state and return it
         board_state = None
         # print("Use computer vision to get board state. Call some function. Make this a subscriber")
-
+        # # TODO
+        # board_state = np.array([
+        #   [ 0,  1,  2,  3,  0],
+        #   [ 0,  0, 10,  0,  0],
+        #   [ 0,  4,  6,  5,  0],
+        #   [ 0,  7,  8,  9,  0],
+        #   [ 0, 11,  0, 12,  0]
+        # ])
         # print("Process board_state and try to make it into some sort of file type")
         return board_state
 
@@ -190,6 +211,9 @@ class Game:
         best_pin_cluster_x = best_pin_cluster_center[0]
 
         ## CONVERT best_pin_cluster_center to x-axis coordinate
+
+
+        # board_state = state
         # board_state = state.board_state
         # TODO
         return None

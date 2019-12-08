@@ -17,3 +17,17 @@ initial_board_state = np.array([
     [ 0,  0,  0,  1,  0,  2,  0,  0,  0],
     [ 0,  0,  0,  0,  0,  0,  0,  0,  0]
 ])
+
+color_dict = {
+    "red":      [255,   0,   0],
+    "green":    [  0, 255,   0],
+    "blue":     [  0,   0, 255]
+}
+
+color_points = {
+    "red":      3,
+    "green":    2,
+    "blue":     1
+}
+
+largest_pin_value = max(color_points.values())
