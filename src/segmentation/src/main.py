@@ -19,9 +19,13 @@ import rospy
 import message_filters
 import ros_numpy
 import tf
+# import json
+# from rospy_message_converter import message_converter
+from segmentation.msg import ImageInfo
 from scipy import stats
 
 from sensor_msgs.msg import Image, CameraInfo, PointCloud2
+from std_msgs.msg import String
 
 import numpy as np
 import cv2
@@ -31,7 +35,7 @@ from cv_bridge import CvBridge
 from image_segmentation import segment_image, segment_image2
 from pointcloud_segmentation import segment_pointcloud
 
-num_pins = 2
+num_pins = 4
 
 
 def get_camera_matrix(camera_info_msg):
@@ -56,10 +60,22 @@ def numpy_to_pc2_msg(points):
         frame_id='camera_depth_optical_frame')
 
 def numpy_to_img_msg(img):
-    # print(img.shape)
-    # print(np.array([img, img, img]).shape)
     return ros_numpy.msgify(Image, img, encoding = 'mono8')
     # return ros_numpy.msgify(Image, np.array([img, img, img]).reshape(480, 640, 3), encoding = 'rgb8')
+
+def dict_to_img_info_msg(info):
+    cluster_colors = info["cluster_colors"]
+    cluster_centers = info["cluster_centers"]
+
+    rs = [ cluster_colors[key][0] for key in cluster_colors.keys()]
+    gs = [ cluster_colors[key][1] for key in cluster_colors.keys()]
+    bs = [ cluster_colors[key][2] for key in cluster_colors.keys()]
+    xs = [cluster_centers[key][0] for key in cluster_centers.keys()]
+    ys = [cluster_centers[key][1] for key in cluster_centers.keys()]
+
+    image_info = ImageInfo(rs, gs, bs, xs, ys)
+
+    return image_info
 
 class PointcloudProcess:
     """
@@ -85,7 +101,7 @@ class PointcloudProcess:
 
         self.points_pub = rospy.Publisher(points_pub_topic, PointCloud2, queue_size=10)
         self.image_pub = rospy.Publisher('segmented_image', Image, queue_size=10)
-        # self.image_info = rospy.Publisher('image_info', Image, queue_size=10)
+        self.image_info_pub = rospy.Publisher('image_info', ImageInfo, queue_size=10)
 
         ts = message_filters.ApproximateTimeSynchronizer([points_sub, image_sub, caminfo_sub],
                                                           10, 0.1, allow_headerless=True)
@@ -119,9 +135,11 @@ class PointcloudProcess:
                 np.array(trans), np.array(rot))
             points_msg = numpy_to_pc2_msg(points)
             seg_img_msg = numpy_to_img_msg(seg_img)
+            img_info_msg = dict_to_img_info_msg(info)
+
             self.points_pub.publish(points_msg)
             self.image_pub.publish(seg_img_msg)
-            # self.image_info.publish(info)
+            self.image_info_pub.publish(img_info_msg)
             print("Published segmented pointcloud at timestamp:",
                    points_msg.header.stamp.secs)
 

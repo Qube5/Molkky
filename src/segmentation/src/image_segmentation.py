@@ -246,7 +246,7 @@ def cluster_segment(img, n_clusters, random_state=0):
 
     # Upsample the image back to the original image (img) using nearest interpolation
     img_u = mc.imresize(cluster_img, (img.shape[0], img.shape[1]), interp='nearest')
-    print(len(set(img_u.ravel())))
+    # print(len(set(img_u.ravel())))
 
     # Do this only if clustering in HSV space
     # img_u = cv2.cvtColor(img_u, cv2.COLOR_HSV2RGB)
@@ -261,8 +261,10 @@ def cluster_segment(img, n_clusters, random_state=0):
     for i in range(len(cluster_vals)):
         val = cluster_vals[i]
         color = kmeans.cluster_centers_[i]
+        # if val == 0:
+        #     continue
         cluster_colors[val] = color
-    print(cluster_colors)
+    # print(cluster_colors)
 
     ## MAKE background color always 0
     background = stats.mode(img_u, axis = None)[0][0]
@@ -273,6 +275,8 @@ def cluster_segment(img, n_clusters, random_state=0):
         temp = cluster_colors[0]
         cluster_colors[0] = cluster_colors[background]
         cluster_colors[background] = temp
+
+    del cluster_colors[0]
 
     ## GET CONTOURS
     # # font = cv2.FONT_HERSHEY_COMPLEX

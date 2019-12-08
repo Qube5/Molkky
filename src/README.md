@@ -44,7 +44,7 @@ path_planner
 
 - python main.py
 	- run from /ros_workspaces/Molkky/src/segmentation/src
-	- OR: python Molkky/src/segmentation/src/main.py
+	- OR: python src/segmentation/src/main.py
 	- Set the fixed frame to camera_depth_optical_frame. In the right hand side window, check the box labelled Invert z-axis. Create an Image display and set its topic to camera/color/image_raw. Now create a Pointcloud2 display, and set its topic to /segmented_points (you may not able to do this until after you have started up main.py).
 	- Add an image display and set its topic to /segmented_image
 
@@ -58,3 +58,6 @@ path_planner
 		- the set_pose function establishes orientation constraints for Sawyer so that the pin doesn't fall out of the launcher
 		- the set_pose function calls functions in path_planner.py to set the sawyer arm to the desired x position
 		- the x position is determined by interpolating between two points on the edges of the game board
+
+- python src/molkky/src/main.py
+	- runs game

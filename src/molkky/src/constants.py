@@ -30,4 +30,7 @@ color_points = {
     "blue":     1
 }
 
+max_x_pixel_left = 0
+max_x_pixel_right = 700
+
 largest_pin_value = max(color_points.values())
