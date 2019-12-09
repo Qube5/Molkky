@@ -1,14 +1,16 @@
 import numpy as np
 import rospy
+import sys
 
 from game_state import GameState
 from constants import *
 from segmentation.msg import ImageInfo
+from path_planner import set_pose
+from geometry_msgs.msg import Vector3
+
 
 def numpy_to_move_msg(move):
     return ros_numpy.msgify(String, move)
-
-# def
 
 class Game:
     def __init__(self, num_players, robot_turn):
@@ -37,10 +39,12 @@ class Game:
         self.current_image_info = info
 
     def take_turn(self):
+        print("Current Score: " + str(self.state.get_scores()))
+
         if not self.current_image_info:
+            print("not getting image info")
             return
 
-        print("Current Score: " + str(self.state.get_scores()))
 
         print("Getting pin state")
         board_state = self.get_new_board_state()
@@ -59,7 +63,8 @@ class Game:
             self.baxter_make_move(next_move)
 
             print("Baxter is moved to position")
-            raw_input("Enter once Baxter is in position")
+            input("Enter once Baxter is in position")
+            # raw_input("Enter once Baxter is in position")
 
             # Baxter throw using pneumatic launcher
             print("Baxter throw")
@@ -67,7 +72,9 @@ class Game:
         else:
             print("Player " + str(self.state.turn) + "'s turn")
             print("Player " + str(self.state.turn) + ". Throw")
-            raw_input("Enter once throw is done")
+            # input("Enter once throw is done")
+            a = raw_input("Enter once throw is done")
+            # raw_input("Enter desired y percentage (0, 1): \n")
 
         print("Please set pins upright after the throw")
         raw_input("Enter once pins are righted")
@@ -144,6 +151,19 @@ class Game:
         print("MOVE", move, x_ratio)
         # print(move)
 
+        # rospy.init_node('moveit_node')
+        # raw_input("Enter once throw is done")
+
+        # ## TODO : determine goal_positions from computer vision code
+        # # y_goal = float(raw_input("Enter desired y position: \n"))
+        y_per = x_ratio
+
+        # # interpolate percentage between -0.5 and 0.3
+        min_lim = -0.2
+        max_lim = 0.5
+        y_des = min_lim + y_per * (max_lim - min_lim)
+        # set_pose(Vector3(0.0, y_goal, 0.0))
+        set_pose(Vector3(0.0, y_des, 0.0))
         ## CONVERT robot-x-axis coordinate to robot move vector
 
         # move_msg = numpy_to_move_msg(move)

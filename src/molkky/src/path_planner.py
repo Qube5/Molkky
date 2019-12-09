@@ -12,7 +12,14 @@ from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import Vector3
 
 from shape_msgs.msg import SolidPrimitive
-from sawyer_set_pose import *
+assert sys.argv[1] in ("sawyer", "baxter")
+ROBOT = sys.argv[1]
+
+if ROBOT == "baxter":
+    from baxter_interface import Limb
+else:
+    from intera_interface import Limb
+# from sawyer_set_pose import *
 
 class PathPlanner(object):
     """
@@ -44,7 +51,7 @@ class PathPlanner(object):
 
         # If the node is shutdown, call this function
         rospy.on_shutdown(self.shutdown)
-
+        # print(sys.argv)
         # Initialize moveit_commander
         moveit_commander.roscpp_initialize(sys.argv)
 
@@ -55,10 +62,10 @@ class PathPlanner(object):
         self._scene = moveit_commander.PlanningSceneInterface()
 
         # This publishes updates to the planning scene
-        self._planning_scene_publisher = rospy.Publisher('/collision_object', CollisionObject, queue_size=10)
+        # self._planning_scene_publisher = rospy.Publisher('/collision_object', CollisionObject, queue_size=10)
 
-        # This subscribes to the desired x position from the computer vision
-        self._goal_position_subscriber = rospy.Subscriber('/goal_position', Vector3, set_pose)
+        # # This subscribes to the desired x position from the computer vision
+        # self._goal_position_subscriber = rospy.Subscriber('/goal_position', Vector3, set_pose)
 
         # Instantiate a move group
         self._group = moveit_commander.MoveGroupCommander(group_name)
@@ -156,3 +163,70 @@ class PathPlanner(object):
         co.id = name
 
         self._planning_scene_publisher.publish(co)
+
+def set_pose(goal_vec):
+    planner = PathPlanner("right_arm") # MoveIt path planning class
+
+    # we can add obstacles if we choose to do so
+
+    ## Create a path constraint for the arm
+    orien_const = OrientationConstraint()
+    orien_const.link_name = "right_hand";
+    orien_const.header.frame_id = "base";
+    # orien_const.orientation.x = 0.92;
+    orien_const.orientation.y = -1;
+    # orien_const.orientation.y = -1;
+    # orien_const.orientation.z = 0.35; 
+    # orien_const.orientation.w = 0.1; 
+    orien_const.absolute_x_axis_tolerance = 0.1;
+    orien_const.absolute_y_axis_tolerance = 0.1;
+    orien_const.absolute_z_axis_tolerance = 0.1;
+    orien_const.weight = 1.0;
+
+    while not rospy.is_shutdown():
+        try:
+            goal = PoseStamped()
+            goal.header.frame_id = "base"
+
+            #x, y, and z position
+            goal.pose.position.x = 0.6 # save this one: 0.6
+            goal.pose.position.y = goal_vec.y
+            goal.pose.position.z = -.2 # save this one: -.2
+            # goal.pose.position.x = 0.5
+            # goal.pose.position.y = goal_vec.y
+            # goal.pose.position.z = -0.2
+
+            #Orientation as a quaternion
+            goal.pose.orientation.x = 0
+            goal.pose.orientation.y = -1
+            goal.pose.orientation.z = 0
+            goal.pose.orientation.w = 0
+            # goal.pose.orientation.x = 0.92
+            # goal.pose.orientation.y = 0.0
+            # goal.pose.orientation.z = 0.35
+            # goal.pose.orientation.w = 0.1
+
+            # plan = planner.plan_to_pose(goal, list()) # no constraints
+            plan = planner.plan_to_pose(goal, [orien_const])
+
+            if not planner.execute_plan(plan):
+                raise Exception("Execution failed")
+        except Exception as e:
+            print e
+        else:
+            break
+
+if __name__ == '__main__':
+    rospy.init_node('moveit_node')
+
+    ## TODO : determine goal_positions from computer vision code
+    # y_goal = float(raw_input("Enter desired y position: \n"))
+    y_per = float(raw_input("Enter desired y percentage (0, 1): \n"))
+
+    # interpolate percentage between -0.5 and 0.3
+    min_lim = -0.2
+    max_lim = 0.5
+    y_des = min_lim + y_per * (max_lim - min_lim)
+
+    # set_pose(Vector3(0.0, y_goal, 0.0))
+    set_pose(Vector3(0.0, y_des, 0.0))

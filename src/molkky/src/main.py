@@ -26,6 +26,7 @@ def play_molkky(num_players, robot_turn):
     print("Scores:", game.state.get_scores())
 
 if __name__ == "__main__":
+    # raw_input("Enter once throw is done")
     num_players = 2
     robot_turn = 1
     if len(sys.argv) > 2:

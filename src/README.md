@@ -30,8 +30,13 @@ path_planner
 - subscribes to joint Position
 - moves arm to that Position
 
-## to run
+to run rosbag: https://drive.google.com/file/d/1h-DLFYY-WIDuKtqrG9ljAPNUhrgM8Eue/view?usp=sharing
+roscore
+rosbag play -l src/bagfiles/realsense.bag
+ln -s /scratch/shared/baxter_ws/baxter.sh ~/ros_workspaces/Molkky/
+rosrun tf tf_echo base right_hand
 
+## to run
 - catkin_make
 - source devel/setup.bash
   - run this in each terminal window
@@ -48,7 +53,8 @@ path_planner
 	- Set the fixed frame to camera_depth_optical_frame. In the right hand side window, check the box labelled Invert z-axis. Create an Image display and set its topic to camera/color/image_raw. Now create a Pointcloud2 display, and set its topic to /segmented_points (you may not able to do this until after you have started up main.py).
 	- Add an image display and set its topic to /segmented_image
 
-- python path_planner.py
+- python src/planning/src/path_planner.py
+	- python path_planner.py
 	- path planning functionality for Sawyer
 	- class with functions that uses MoveIt to set Sawyer to goal position, add obstacles, set constraints, etc.
 	- publishes obstacles
@@ -61,3 +67,17 @@ path_planner
 
 - python src/molkky/src/main.py
 	- runs game
+
+
+At time 1575926809.076
+- Translation: [0.467, -0.433, 0.256]
+- Rotation: in Quaternion [0.921, 0.020, 0.355, 0.157]
+            in RPY (radian) [2.732, -0.705, 0.197]
+            in RPY (degree) [156.531, -40.390, 11.270]
+
+
+At time 1575926891.256
+- Translation: [0.598, 0.227, 0.114]
+- Rotation: in Quaternion [0.920, -0.067, 0.383, 0.053]
+            in RPY (radian) [3.077, -0.791, -0.118]
+            in RPY (degree) [176.290, -45.333, -6.758]
