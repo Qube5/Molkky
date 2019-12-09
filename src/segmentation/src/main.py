@@ -143,6 +143,32 @@ class PointcloudProcess:
             print("Published segmented pointcloud at timestamp:",
                    points_msg.header.stamp.secs)
 
+    def capture_once_calibration(self):
+        if self.messages:
+            points, image, cam_matrix = self.messages.pop()
+            try:
+                trans, rot = self.listener.lookupTransform(
+                                                       '/camera_color_optical_frame',
+                                                       '/camera_depth_optical_frame',
+                                                       rospy.Time(0))
+                rot = tf.transformations.quaternion_matrix(rot)[:3, :3]
+            except (tf.LookupException,
+                    tf.ConnectivityException,
+                    tf.ExtrapolationException):
+                return
+            # points, seg_img, info = isolate_object_of_interest(points, image, info,
+            #     np.array(trans), np.array(rot))
+            trans = np.array(trans)
+            rot = np.array(rot)
+
+            segmented_image, info = segment_image2(image, 3)
+            segmented_image_binary = segmented_image_to_binary(segmented_image)
+            # points = segment_pointcloud(points, segmented_image_binary, cam_matrix,
+            #     np.array(trans), np.array(rot))
+            return info, segmented_image, segmented_image_binary
+
+
+
 def main():
     CAM_INFO_TOPIC = '/camera/color/camera_info'
     RGB_IMAGE_TOPIC = '/camera/color/image_raw'
