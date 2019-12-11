@@ -35,7 +35,7 @@ from cv_bridge import CvBridge
 from image_segmentation import segment_image, segment_image2
 from pointcloud_segmentation import segment_pointcloud
 
-num_pins = 2
+num_pins = 4
 
 
 def get_camera_matrix(camera_info_msg):

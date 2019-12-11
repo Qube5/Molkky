@@ -7,7 +7,6 @@ import time
 from game_state import GameState
 from constants import *
 from segmentation.msg import ImageInfo
-# from path_planner import set_pose
 from path_planner import PathPlanner
 from geometry_msgs.msg import Vector3
 from moveit_msgs.msg import OrientationConstraint, Constraints, CollisionObject
@@ -35,7 +34,8 @@ class Game:
         # self.arduino.write("Hello from Python!")
 
         self.current_pos = 0
-        # self.set_initial_pose(self.current_pos)
+        raw_input("Enter to set initial position ")
+        self.set_initial_pose(self.current_pos)
 
         rospy.Subscriber('image_info', ImageInfo, self.info_callback)
 
@@ -61,7 +61,7 @@ class Game:
         return self.current_image_info
 
     def take_turn(self):
-        print("Current Score: " + str(self.state.get_scores()))
+        print("\nCurrent Score: " + str(self.state.get_scores()))
 
         if not self.current_image_info:
             print("not getting image info")
@@ -73,29 +73,29 @@ class Game:
 
         # Turn starts with strategy then a throw
         if (self.state.turn == self.state.robot_turn):
-            print("Starting Baxter's Turn")
+            print("Starting Sawyer's Turn")
             print("Analyze board to get the best move")
             # using the previous board state to figure out the best move
             next_move = self.get_best_expected_move(board_state)
             print("Next move acquired (x position)", next_move)
 
             # Send move to make move
-            raw_input("Enter for baxter to move to position")
-            self.baxter_make_move(next_move)
+            raw_input("Enter for Sawyer to move to position ")
+            self.sawyer_make_move(next_move)
 
-            print("Baxter is moving to position")
-            raw_input("Enter once Baxter is in position")
+            print("Sawyer is moving to position")
+            raw_input("Enter once Sawyer is in position ")
 
-            # Baxter throw using pneumatic launcher
-            print("Baxter throw")
-            self.baxter_throw()
+            # Sawyer throw using pneumatic launcher
+            print("Sawyer throw")
+            self.sawyer_throw()
         else:
             print("Player " + str(self.state.turn) + "'s turn")
             print("Player " + str(self.state.turn) + ". Throw")
             raw_input("Enter once throw is done")
 
         print("Please set pins upright after the throw")
-        raw_input("Enter once pins are righted")
+        raw_input("Enter once pins are righted ")
 
         points_gained = self.score_board()
 
@@ -206,12 +206,12 @@ class Game:
 
         return num_pins
 
-    def baxter_make_move(self, move):
+    def sawyer_make_move(self, move):
         pixel_x = move
         x_ratio = (pixel_x - max_x_pixel_left) / (max_x_pixel_right - max_x_pixel_left)
 
         y_per = x_ratio
-        self.baxter_move_percent(y_per)
+        self.sawyer_move_percent(y_per)
         # # # interpolate percentage between -0.5 and 0.3
         # min_lim = max_sawyer_left
         # max_lim = max_sawyer_right
@@ -224,7 +224,7 @@ class Game:
         # TODO BIANCA
         # return None
 
-    def baxter_move_percent(self, move_percent):
+    def sawyer_move_percent(self, move_percent):
         y_per = move_percent
 
         # # interpolate percentage between -0.5 and 0.3
@@ -322,9 +322,9 @@ class Game:
             else:
                 break
 
-    def baxter_throw(self):
-        raw_input("Press enter for Baxter to throw")
-        print("Throwing")
+    def sawyer_throw(self):
+        raw_input("LAUNCH pin! Press Enter when done ")
+        print("Thrown")
         # for i in range(25):
         #     self.arduino.write(1)
         #     # arduino.write("throw".encode())

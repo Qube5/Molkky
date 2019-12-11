@@ -58,10 +58,10 @@ def capture_loc(game):
     # return np.mean(lcenters), np.mean(rcenters)
     current_image_info = np.array(game.current_image_info)
     current_image_info = np.array(game.get_current_image_info())
-    print(current_image_info)
-    xy = current_image_info[2:]
-    print(xy)
-    return 1, 0
+    xy = np.array(current_image_info)[:,3:]
+    x = xy[:,0]
+    # print(x)
+    return x[0], x[1]
 
 def calibrate():
     # baxter_make_move(5, max=True)
@@ -92,7 +92,7 @@ def calibrate():
     raw_input("Press enter when done placing left marker")
 
     left_loc, right_loc = capture_loc(game)
-    # print(left_loc, right_loc)
+    print(left_loc, right_loc)
     # print(game.current_image_info, "current_image_info")
     return left_loc, right_loc, np.linalg.norm(np.array(right_loc) - np.array(left_loc))
 

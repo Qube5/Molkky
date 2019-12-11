@@ -210,7 +210,12 @@ def cluster_segment(img, n_clusters, random_state=0):
 
 
     # Downsample img first using the mean to speed up K-means
+
+
+
     img_d = block_reduce(img, block_size=(2, 2, 1), func=np.mean)
+
+    img_d = cv2.GaussianBlur(img_d,(5,5),0)
 
 
 
