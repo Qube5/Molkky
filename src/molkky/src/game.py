@@ -29,10 +29,10 @@ class Game:
 
         self.planner = PathPlanner("right_arm") # MoveIt path planning class
 
-        # #Change port/baud rate later
-        # self.arduino = serial.Serial('COM1', 9600, timeout=.1)
-        # time.sleep(1) #give the connection a second to settle
-        # self.arduino.write("Hello from Python!")
+        # # Change port/baud rate later
+        self.arduino = serial.Serial('/dev/ttyACM0', 9600, timeout=.1)
+        time.sleep(1) #give the connection a second to settle
+        self.arduino.write("Hello from Python!")
 
         self.current_pos = 0
         self.set_initial_pose(self.current_pos)
@@ -304,8 +304,8 @@ class Game:
     def baxter_throw(self):
         raw_input("Press enter for Baxter to throw")
         print("Throwing")
-        # for i in range(25):
-        #     self.arduino.write(1)
-        # #     self.arduino.write("throw".encode())
-        # self.arduino.write("".encode())
+        for i in range(25):
+            self.arduino.write(1)
+            # arduino.write("throw".encode())
+        self.arduino.write("".encode())
         return True
