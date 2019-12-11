@@ -30,12 +30,12 @@ class Game:
         self.planner = PathPlanner("right_arm") # MoveIt path planning class
 
         # # Change port/baud rate later
-        self.arduino = serial.Serial('/dev/ttyACM0', 9600, timeout=.1)
-        time.sleep(1) #give the connection a second to settle
-        self.arduino.write("Hello from Python!")
+        # self.arduino = serial.Serial('/dev/ttyACM0', 9600, timeout=.1)
+        # time.sleep(1) #give the connection a second to settle
+        # self.arduino.write("Hello from Python!")
 
         self.current_pos = 0
-        self.set_initial_pose(self.current_pos)
+        # self.set_initial_pose(self.current_pos)
 
         rospy.Subscriber('image_info', ImageInfo, self.info_callback)
 
@@ -53,6 +53,12 @@ class Game:
             rospy.logerr(e)
             return
         self.current_image_info = info
+
+    def get_current_image_info(self):
+        print("Waiting for current image info...")
+        while not self.current_image_info:
+            print("wait")
+        return self.current_image_info
 
     def take_turn(self):
         print("Current Score: " + str(self.state.get_scores()))
@@ -205,6 +211,21 @@ class Game:
         x_ratio = (pixel_x - max_x_pixel_left) / (max_x_pixel_right - max_x_pixel_left)
 
         y_per = x_ratio
+        self.baxter_move_percent(y_per)
+        # # # interpolate percentage between -0.5 and 0.3
+        # min_lim = max_sawyer_left
+        # max_lim = max_sawyer_right
+
+        # y_des = min_lim + y_per * (max_lim - min_lim)
+        # # set_pose(Vector3(0.0, y_goal, 0.0))
+        # # self.set_pose(Vector3(0.0, y_des, 0.0))
+        # self.set_pose_incrementally(Vector3(0.0, y_des, 0.0), self.current_pos, 3)
+        # self.current_pos = y_des
+        # TODO BIANCA
+        # return None
+
+    def baxter_move_percent(self, move_percent):
+        y_per = move_percent
 
         # # interpolate percentage between -0.5 and 0.3
         min_lim = max_sawyer_left
@@ -304,8 +325,8 @@ class Game:
     def baxter_throw(self):
         raw_input("Press enter for Baxter to throw")
         print("Throwing")
-        for i in range(25):
-            self.arduino.write(1)
-            # arduino.write("throw".encode())
-        self.arduino.write("".encode())
+        # for i in range(25):
+        #     self.arduino.write(1)
+        #     # arduino.write("throw".encode())
+        # self.arduino.write("".encode())
         return True

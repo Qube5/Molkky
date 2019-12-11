@@ -14,4 +14,4 @@ def throw():
         # arduino.write("throw".encode())
     arduino.write("".encode())
 
-    return
+    return 
