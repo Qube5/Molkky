@@ -5,6 +5,7 @@ Author: Valmik Prabhu
 """
 
 import sys
+import numpy as np
 import rospy
 import moveit_commander
 from moveit_msgs.msg import OrientationConstraint, Constraints, CollisionObject
@@ -62,7 +63,7 @@ class PathPlanner(object):
         self._scene = moveit_commander.PlanningSceneInterface()
 
         # This publishes updates to the planning scene
-        # self._planning_scene_publisher = rospy.Publisher('/collision_object', CollisionObject, queue_size=10)
+        self._planning_scene_publisher = rospy.Publisher('/collision_object', CollisionObject, queue_size=10)
 
         # # This subscribes to the desired x position from the computer vision
         # self._goal_position_subscriber = rospy.Subscriber('/goal_position', Vector3, set_pose)
@@ -164,8 +165,44 @@ class PathPlanner(object):
 
         self._planning_scene_publisher.publish(co)
 
-def set_pose(goal_vec):
+def set_initial_pose():
+    y_des = 0
+    goal_vec = Vector3(0.0, y_des, 0.0)
+    set_pose(goal_vec, False)
+
+def set_pose_incrementally(goal_vec, current_pos):
+    goal_pos = goal_vec.y
+    for inc in np.linspace(current_pos, goal_pos, num=3, endpoint=True):
+        print(inc)
+        set_pose(Vector3(0.0, current_pos + inc, 0.0))
+        # set_pose(current_pos + inc)
+
+def set_pose(goal_vec, obstacles = True):
     planner = PathPlanner("right_arm") # MoveIt path planning class
+
+
+    if obstacles:
+        # ## Add the obstacle to the planning scene here
+        table_size = np.array([0.60, 1.0, 0.10])
+        table_name = "table"
+
+        table_pose = PoseStamped()
+        table_pose.header.frame_id = "base"
+
+        #x, y, and z position
+        table_pose.pose.position.x = 0.15
+        table_pose.pose.position.y = 0
+        table_pose.pose.position.z = 0.70
+
+        #Orientation as a quaternion
+        table_pose.pose.orientation.x = 0.0
+        table_pose.pose.orientation.y = 0.0
+        table_pose.pose.orientation.z = 0.0
+        table_pose.pose.orientation.w = 1.0
+        planner.add_box_obstacle(table_size, table_name, table_pose)    
+    else:
+        planner.remove_obstacle("table")
+
 
     # we can add obstacles if we choose to do so
 
@@ -176,8 +213,8 @@ def set_pose(goal_vec):
     # orien_const.orientation.x = 0.92;
     orien_const.orientation.y = -1;
     # orien_const.orientation.y = -1;
-    # orien_const.orientation.z = 0.35; 
-    # orien_const.orientation.w = 0.1; 
+    # orien_const.orientation.z = 0.35;
+    # orien_const.orientation.w = 0.1;
     orien_const.absolute_x_axis_tolerance = 0.1;
     orien_const.absolute_y_axis_tolerance = 0.1;
     orien_const.absolute_z_axis_tolerance = 0.1;
@@ -206,8 +243,8 @@ def set_pose(goal_vec):
             # goal.pose.orientation.z = 0.35
             # goal.pose.orientation.w = 0.1
 
-            # plan = planner.plan_to_pose(goal, list()) # no constraints
-            plan = planner.plan_to_pose(goal, [orien_const])
+            plan = planner.plan_to_pose(goal, list()) # no constraints
+            # plan = planner.plan_to_pose(goal, [orien_const])
 
             if not planner.execute_plan(plan):
                 raise Exception("Execution failed")
@@ -226,7 +263,12 @@ if __name__ == '__main__':
     # interpolate percentage between -0.5 and 0.3
     min_lim = -0.2
     max_lim = 0.5
+
     y_des = min_lim + y_per * (max_lim - min_lim)
 
     # set_pose(Vector3(0.0, y_goal, 0.0))
+    # set_pose(Vector3(0.0, y_des, 0.0))
+    # set_initial_pose()
+    print(y_des)
+    set_pose_incrementally(Vector3(0.0, y_des, 0.0), -.2)
     set_pose(Vector3(0.0, y_des, 0.0))

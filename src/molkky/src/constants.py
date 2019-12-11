@@ -1,7 +1,7 @@
 import numpy as np
 
-winning_score = 50
-back_score = 25
+winning_score = 20
+back_score = 10
 
 # initial board state:
 #    7 9 8
@@ -19,18 +19,23 @@ initial_board_state = np.array([
 ])
 
 color_dict = {
-    "red":      [255,   0,   0],
-    "green":    [  0, 255,   0],
-    "blue":     [  0,   0, 255]
+    "white":    [  0,   0,     0],
+    "red":      [255,   0,     0],
+    "yellow":   [  0, 255,   255],
+    "blue":     [  0,   0,   255]
 }
 
 color_points = {
+    "white":    4,
     "red":      3,
-    "green":    2,
+    "yellow":   2,
     "blue":     1
 }
 
 max_x_pixel_left = 0
 max_x_pixel_right = 700
+
+max_sawyer_left = -0.2
+max_sawyer_right = 0.5
 
 largest_pin_value = max(color_points.values())

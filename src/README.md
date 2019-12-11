@@ -30,11 +30,24 @@ path_planner
 - subscribes to joint Position
 - moves arm to that Position
 
+### Useful Notes
 to run rosbag: https://drive.google.com/file/d/1h-DLFYY-WIDuKtqrG9ljAPNUhrgM8Eue/view?usp=sharing
 roscore
 rosbag play -l src/bagfiles/realsense.bag
 ln -s /scratch/shared/baxter_ws/baxter.sh ~/ros_workspaces/Molkky/
 rosrun tf tf_echo base right_hand
+
+At time 1575926809.076
+- Translation: [0.467, -0.433, 0.256]
+- Rotation: in Quaternion [0.921, 0.020, 0.355, 0.157]
+            in RPY (radian) [2.732, -0.705, 0.197]
+            in RPY (degree) [156.531, -40.390, 11.270]
+
+At time 1575926891.256
+- Translation: [0.598, 0.227, 0.114]
+- Rotation: in Quaternion [0.920, -0.067, 0.383, 0.053]
+            in RPY (radian) [3.077, -0.791, -0.118]
+            in RPY (degree) [176.290, -45.333, -6.758]
 
 ## to run
 - catkin_make
@@ -81,3 +94,11 @@ At time 1575926891.256
 - Rotation: in Quaternion [0.920, -0.067, 0.383, 0.053]
             in RPY (radian) [3.077, -0.791, -0.118]
             in RPY (degree) [176.290, -45.333, -6.758]
+
+
+rosrun intera_interface enable_robot.py -e
+
+rosrun intera_interface joint_trajectory_action_server.py
+
+roslaunch sawyer_moveit_config sawyer_moveit.launch electric_gripper:=true
+
