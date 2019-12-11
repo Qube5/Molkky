@@ -12,6 +12,7 @@ from path_planner import PathPlanner
 from geometry_msgs.msg import Vector3
 from moveit_msgs.msg import OrientationConstraint, Constraints, CollisionObject
 import math
+from geometry_msgs.msg import PoseStamped
 
 def numpy_to_move_msg(move):
     return ros_numpy.msgify(String, move)
@@ -73,12 +74,11 @@ class Game:
             print("Next move acquired (x position)", next_move)
 
             # Send move to make move
-            print("Move baxter to position")
+            raw_input("Enter for baxter to move to position")
             self.baxter_make_move(next_move)
 
             print("Baxter is moving to position")
-            input("Enter once Baxter is in position")
-            # raw_input("Enter once Baxter is in position")
+            raw_input("Enter once Baxter is in position")
 
             # Baxter throw using pneumatic launcher
             print("Baxter throw")
@@ -86,9 +86,7 @@ class Game:
         else:
             print("Player " + str(self.state.turn) + "'s turn")
             print("Player " + str(self.state.turn) + ". Throw")
-            # input("Enter once throw is done")
             raw_input("Enter once throw is done")
-            # raw_input("Enter desired y percentage (0, 1): \n")
 
         print("Please set pins upright after the throw")
         raw_input("Enter once pins are righted")
@@ -161,10 +159,10 @@ class Game:
         current_score = self.scores[self.robot_turn]
         max_possible = 0
         max_desired = winning_score - current_score
-        best_pin_idx = 0
+        best_pin_idx = 0 
         for i in range(len(pins)):
-            curr_pin_value = get_pin_value(pins[i][3:])
-            num_near_pins = num_pins_near_pin(i, pins)
+            curr_pin_value = self.get_pin_value(pins[i][2:])
+            num_near_pins = self.num_pins_near_pin(i, pins)
             if num_near_pins > 1:
                 curr_pin_value = 0
             if curr_pin_value > max_possible or num_near_pins > max_possible:
@@ -177,7 +175,7 @@ class Game:
     def get_pin_value(self, rgb):
         rgb = np.array(rgb)
         closest_pin_color = ""
-        closest_pin_distance = 100000000000000
+        closest_pin_distance = np.Inf
         for color in color_dict.keys():
             pin_rgb = np.array(color_dict[color])
             pin_rgb_distance = np.linalg.norm(pin_rgb - rgb)
@@ -189,11 +187,13 @@ class Game:
         return pin_value
 
     def num_pins_near_pin(self, pin_idx, pins):
-        x = pins[pin_idx][0]
-        buffer = 30
+        x = int(math.floor(pins[pin_idx][0]))
+        buf = 30
         num_pins = 0
-        for px in range(x - buffer, x + buffer):
-            for p in range(len(pins))
+        # print(pins)
+        print(x, type(x))
+        for px in range(x - buf, x + buf):
+            for p in range(len(pins)):
                 if p != pin_idx:
                     if pins[p][0] == px:
                         num_pins = num_pins + 1
@@ -218,22 +218,39 @@ class Game:
         # TODO BIANCA
         return None
 
-    def set_pose_incrementally(goal_vec, current_pos, num_steps):
-        new_pos = goal_vec.y
-        for inc in np.linspace(current_pos, new_pos, num=num_steps, endpoint=True):
-            y_des = current_pos + inc
-            self.set_pose(Vector3(0.0, y_des, 0.0))
+    def set_pose_incrementally(self, goal_vec, current_pos, num_steps):
+        goal_pos = goal_vec.y
+        for inc in np.linspace(0, goal_pos-current_pos, num=3, endpoint=True):
+            if inc != 0:
+                self.set_pose(Vector3(0.0, current_pos + inc, 0.0))
 
-    def set_initial_pose(initial_y = 0):
-        self.set_pose(Vector3(0.0, initial_y, 0.0), False)
+    def set_initial_pose(self, initial_y = 0):
+        goal_vec = Vector3(0.0, initial_y, 0.0)
+        self.set_pose(goal_vec, False)
 
-    def add_obstacle(size, x, y, z):
-        return
+    def add_obstacle(self, size = [0.60, 1.0, 0.10], x = .15, y=0, z=0.7):
+        table_size = np.array(size)
+        table_name = "table"
 
-    def remove_obstacle():
-        self.planner.remove_obstacle("table")
+        table_pose = PoseStamped()
+        table_pose.header.frame_id = "base"
 
-    def get_constraints(add_constraints = False):
+        #x, y, and z position
+        table_pose.pose.position.x = x
+        table_pose.pose.position.y = y
+        table_pose.pose.position.z = z
+
+        #Orientation as a quaternion
+        table_pose.pose.orientation.x = 0.0
+        table_pose.pose.orientation.y = 0.0
+        table_pose.pose.orientation.z = 0.0
+        table_pose.pose.orientation.w = 1.0
+        self.planner.add_box_obstacle(table_size, table_name, table_pose)    
+
+    def remove_obstacle(self, obstacle_name = "table"):
+        self.planner.remove_obstacle(obstacle_name)
+
+    def get_constraints(self, add_constraints = False):
         constraints = []
         if add_constraints:
             ## Create a path constraint for the arm
@@ -242,24 +259,18 @@ class Game:
             orien_const.header.frame_id = "base";
             # orien_const.orientation.x = 0.92;
             orien_const.orientation.y = -1;
-            # orien_const.orientation.y = -1;
-            # orien_const.orientation.z = 0.35;
-            # orien_const.orientation.w = 0.1;
-            orien_const.absolute_x_axis_tolerance = math.pi / 4;
-            orien_const.absolute_y_axis_tolerance = math.pi / 4;
-            orien_const.absolute_z_axis_tolerance = 2 * math.pi;
-            # orien_const.absolute_x_axis_tolerance = 0.1;
-            # orien_const.absolute_y_axis_tolerance = 0.1;
-            # orien_const.absolute_z_axis_tolerance = 0.1;
+            orien_const.absolute_x_axis_tolerance = 0.1;
+            orien_const.absolute_y_axis_tolerance = 0.1;
+            orien_const.absolute_z_axis_tolerance = 0.1;
             orien_const.weight = 1.0;
             constraints.append(orien_const)
         return constraints
 
-    def set_pose(goal_vec, obstacle = True):
+    def set_pose(self, goal_vec, obstacle = True):
 
         # we can add obstacles if we choose to do so
         if obstacle:
-            self.add_obstacle([], 0, 0, 0)
+            self.add_obstacle()
         else:
             self.remove_obstacle()
 
@@ -274,36 +285,13 @@ class Game:
                 goal.pose.position.x = 0.6 # save this one: 0.6
                 goal.pose.position.y = goal_vec.y
                 goal.pose.position.z = -.2 # save this one: -.2
-                # goal.pose.position.x = 0.5
-                # goal.pose.position.y = goal_vec.y
-                # goal.pose.position.z = -0.2
 
                 #Orientation as a quaternion
                 goal.pose.orientation.x = 0
                 goal.pose.orientation.y = -1
                 goal.pose.orientation.z = 0
                 goal.pose.orientation.w = 0
-                # goal.pose.orientation.x = 0.92
-                # goal.pose.orientation.y = 0.0
-                # goal.pose.orientation.z = 0.35
-                # goal.pose.orientation.w = 0.1
 
-                # # This time WITH MATH!
-                # theta = -math.pi/8
-                # a = math.sqrt((1 - (math.cos(theta))^2) / (2 * math.sin(theta)^2))
-                # goal.pose.orientation.x = a * math.sin(theta)
-                # goal.pose.orientation.y = 0
-                # goal.pose.orientation.z = a * math.sin(theta)
-                # goal.pose.orientation.w = math.cos(theta)
-
-                # # This time to have everything constant
-                # goal.pose.orientation.x = 0
-                # goal.pose.orientation.y = 0
-                # goal.pose.orientation.z = 0
-                # goal.pose.orientation.w = 1
-
-                # plan = planner.plan_to_pose(goal, list()) # no constraints
-                # plan = self.planner.plan_to_pose(goal, [orien_const])
                 plan = self.planner.plan_to_pose(goal, constraints)
 
                 if not self.planner.execute_plan(plan):
@@ -317,6 +305,7 @@ class Game:
         raw_input("Press enter for Baxter to throw")
         print("Throwing")
         # for i in range(25):
-        #     self.arduino.write("throw".encode())
+        #     self.arduino.write(1)
+        # #     self.arduino.write("throw".encode())
         # self.arduino.write("".encode())
         return True

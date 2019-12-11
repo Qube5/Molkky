@@ -7,19 +7,21 @@ Author: Valmik Prabhu
 import sys
 import numpy as np
 import rospy
+import math
 import moveit_commander
 from moveit_msgs.msg import OrientationConstraint, Constraints, CollisionObject
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import Vector3
 
 from shape_msgs.msg import SolidPrimitive
-assert sys.argv[1] in ("sawyer", "baxter")
-ROBOT = sys.argv[1]
+# assert sys.argv[1] in ("sawyer", "baxter")
+# ROBOT = sys.argv[1]
 
-if ROBOT == "baxter":
-    from baxter_interface import Limb
-else:
-    from intera_interface import Limb
+# if ROBOT == "baxter":
+#     from baxter_interface import Limb
+# else:
+#     from intera_interface import Limb
+from intera_interface import Limb
 # from sawyer_set_pose import *
 
 class PathPlanner(object):
@@ -172,10 +174,9 @@ def set_initial_pose():
 
 def set_pose_incrementally(goal_vec, current_pos):
     goal_pos = goal_vec.y
-    for inc in np.linspace(current_pos, goal_pos, num=3, endpoint=True):
-        print(inc)
-        set_pose(Vector3(0.0, current_pos + inc, 0.0))
-        # set_pose(current_pos + inc)
+    for inc in np.linspace(0, goal_pos-current_pos, num=3, endpoint=True):
+        if inc != 0:
+            set_pose(Vector3(0.0, current_pos + inc, 0.0))
 
 def set_pose(goal_vec, obstacles = True):
     planner = PathPlanner("right_arm") # MoveIt path planning class
@@ -211,7 +212,7 @@ def set_pose(goal_vec, obstacles = True):
     orien_const.link_name = "right_hand";
     orien_const.header.frame_id = "base";
     # orien_const.orientation.x = 0.92;
-    orien_const.orientation.y = -1;
+    orien_const.orientation.w = 1;
     # orien_const.orientation.y = -1;
     # orien_const.orientation.z = 0.35;
     # orien_const.orientation.w = 0.1;
@@ -234,14 +235,11 @@ def set_pose(goal_vec, obstacles = True):
             # goal.pose.position.z = -0.2
 
             #Orientation as a quaternion
+       
             goal.pose.orientation.x = 0
             goal.pose.orientation.y = -1
             goal.pose.orientation.z = 0
             goal.pose.orientation.w = 0
-            # goal.pose.orientation.x = 0.92
-            # goal.pose.orientation.y = 0.0
-            # goal.pose.orientation.z = 0.35
-            # goal.pose.orientation.w = 0.1
 
             plan = planner.plan_to_pose(goal, list()) # no constraints
             # plan = planner.plan_to_pose(goal, [orien_const])
@@ -269,6 +267,7 @@ if __name__ == '__main__':
     # set_pose(Vector3(0.0, y_goal, 0.0))
     # set_pose(Vector3(0.0, y_des, 0.0))
     # set_initial_pose()
-    print(y_des)
-    set_pose_incrementally(Vector3(0.0, y_des, 0.0), -.2)
+    # print(y_des)
+    # set_pose_incrementally(Vector3(0.0, y_des, 0.0), min_lim + .8 * (max_lim - min_lim))
+    # set_pose_incrementally(Vector3(0.0, y_des, 0.0), min_lim)
     set_pose(Vector3(0.0, y_des, 0.0))

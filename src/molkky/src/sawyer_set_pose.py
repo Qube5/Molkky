@@ -5,13 +5,13 @@ Author: Valmik Prabhu
 """
 
 import sys
-assert sys.argv[1] in ("sawyer", "baxter")
-ROBOT = sys.argv[1]
+# assert sys.argv[1] in ("sawyer", "baxter")
+# ROBOT = sys.argv[1]
 
-if ROBOT == "baxter":
-    from baxter_interface import Limb
-else:
-    from intera_interface import Limb
+# if ROBOT == "baxter":
+#     from baxter_interface import Limb
+# else:
+from intera_interface import Limb
 
 import rospy
 import numpy as np
