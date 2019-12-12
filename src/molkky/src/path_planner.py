@@ -167,6 +167,33 @@ class PathPlanner(object):
 def set_pose(goal_vec):
     planner = PathPlanner("right_arm") # MoveIt path planning class
 
+
+    if obstacles:
+        # ## Add the obstacle to the planning scene here
+        table_size = np.array([0.60, 1.0, 0.10])
+        table_name = "table"
+
+        table_pose = PoseStamped()
+        table_pose.header.frame_id = "base"
+
+        #x, y, and z position
+        # table_pose.pose.position.x = 0.15
+        # table_pose.pose.position.y = 0
+        # table_pose.pose.position.z = 0.70
+        table_pose.pose.position.x = 0.15
+        table_pose.pose.position.y = 0
+        table_pose.pose.position.z = 0.75
+
+        #Orientation as a quaternion
+        table_pose.pose.orientation.x = 0.0
+        table_pose.pose.orientation.y = 0.0
+        table_pose.pose.orientation.z = 0.0
+        table_pose.pose.orientation.w = 1.0
+        planner.add_box_obstacle(table_size, table_name, table_pose)
+    else:
+        planner.remove_obstacle("table")
+
+
     # we can add obstacles if we choose to do so
 
     ## Create a path constraint for the arm
@@ -176,8 +203,8 @@ def set_pose(goal_vec):
     # orien_const.orientation.x = 0.92;
     orien_const.orientation.y = -1;
     # orien_const.orientation.y = -1;
-    # orien_const.orientation.z = 0.35; 
-    # orien_const.orientation.w = 0.1; 
+    # orien_const.orientation.z = 0.35;
+    # orien_const.orientation.w = 0.1;
     orien_const.absolute_x_axis_tolerance = 0.1;
     orien_const.absolute_y_axis_tolerance = 0.1;
     orien_const.absolute_z_axis_tolerance = 0.1;
@@ -189,9 +216,12 @@ def set_pose(goal_vec):
             goal.header.frame_id = "base"
 
             #x, y, and z position
-            goal.pose.position.x = 0.6 # save this one: 0.6
+            # goal.pose.position.x = 0.6 # save this one: 0.6
+            # goal.pose.position.y = goal_vec.y
+            # goal.pose.position.z = -.2 # save this one: -.
+            goal.pose.position.x = 0.7 #
             goal.pose.position.y = goal_vec.y
-            goal.pose.position.z = -.2 # save this one: -.2
+            goal.pose.position.z = 0.3 #
             # goal.pose.position.x = 0.5
             # goal.pose.position.y = goal_vec.y
             # goal.pose.position.z = -0.2

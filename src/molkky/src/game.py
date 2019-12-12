@@ -143,8 +143,10 @@ class Game:
         val_list = list(color_points.values())
         best_pin_color = key_list[val_list.index(best_pin_points)]
         best_pin_rgb = np.array(color_dict[best_pin_color])
+        print(best_pin_color)
 
         ## Get index of best pin
+        closest_pin_rgb = best_pin_rgb
         closest_pin_index = 0
         closest_pin_distance = 1000000000
         for i in range(len(board_state)):
@@ -153,12 +155,14 @@ class Game:
             if pin_rgb_distance < closest_pin_distance:
                 closest_pin_distance = pin_rgb_distance
                 closest_pin_index = i
-
+                closest_pin_rgb = pin_rgb
+        print(closest_pin_rgb)
         closest_pin_loc = board_state[i][3:]
         closest_pin_x = closest_pin_loc[0]
 
         return closest_pin_x
 
+<<<<<<< HEAD
 <<<<<<< HEAD
     def baxter_make_move(self, move):
 =======
@@ -178,6 +182,24 @@ class Game:
                     max_possible = max(curr_pin_value, num_near_pins)
 
         return pins[best_pin_idx][0]
+=======
+    # def get_best_expected_move(self, pins):
+    #     current_score = self.scores[self.robot_turn]
+    #     max_possible = 0
+    #     max_desired = winning_score - current_score
+    #     best_pin_idx = 0
+    #     for i in range(len(pins)):
+    #         curr_pin_value = self.get_pin_value(pins[i][2:])
+    #         num_near_pins = self.num_pins_near_pin(i, pins)
+    #         if num_near_pins > 1:
+    #             curr_pin_value = 0
+    #         if curr_pin_value > max_possible or num_near_pins > max_possible:
+    #             if curr_pin_value <= max_desired or num_near_pins <= max_desired:
+    #                 best_pin_idx = i
+    #                 max_possible = max(curr_pin_value, num_near_pins)
+    #     print(self.get_pin_value(pins[best_pin_idx][2:]))
+    #     return pins[best_pin_idx][0]
+>>>>>>> 99ebce733aecc6d660acf86658490724b8fe164d
 
     def get_pin_value(self, rgb):
         rgb = np.array(rgb)
@@ -235,8 +257,13 @@ class Game:
         # TODO BIANCA
         # return None
 
-    def sawyer_move_percent(self, move_percent):
+    def sawyer_move_percent(self, move_percent, camera_opposite = True):
+        print(move_percent)
+        if camera_opposite:
+            move_percent = 1 - move_percent
+
         y_per = move_percent
+        print(move_percent)
 
         # # interpolate percentage between -0.5 and 0.3
         min_lim = -0.2
@@ -252,12 +279,6 @@ class Game:
         # TODO BIANCA
         return None
 
-<<<<<<< HEAD
-    def baxter_throw(self):
-        raw_input("Press enter for Baxter to throw")
-        print("THROW")
-        # TODO WILLIAM
-=======
     def set_pose_incrementally(self, goal_vec, current_pos, num_steps):
         goal_pos = goal_vec.y
         for inc in np.linspace(0, goal_pos-current_pos, num=3, endpoint=True):
@@ -268,7 +289,7 @@ class Game:
         goal_vec = Vector3(0.0, initial_y, 0.0)
         self.set_pose(goal_vec, False)
 
-    def add_obstacle(self, size = [0.60, 1.0, 0.10], x = .15, y=0, z=0.7):
+    def add_obstacle(self, size = [0.60, 1.0, 0.10], x = .15, y=0, z=0.75):
         table_size = np.array(size)
         table_name = "table"
 
@@ -322,9 +343,9 @@ class Game:
                 goal.header.frame_id = "base"
 
                 #x, y, and z position
-                goal.pose.position.x = 0.6 # save this one: 0.6
+                goal.pose.position.x = 0.7 # save this one: 0.6
                 goal.pose.position.y = goal_vec.y
-                goal.pose.position.z = -.2 # save this one: -.2
+                goal.pose.position.z = 0.3 # save this one: -.2
 
                 #Orientation as a quaternion
                 goal.pose.orientation.x = 0
@@ -348,5 +369,4 @@ class Game:
         #     self.arduino.write(1)
         #     # arduino.write("throw".encode())
         # self.arduino.write("".encode())
->>>>>>> c6c00cea0b92cda53d0403fd96a67fe3f748eae4
         return True

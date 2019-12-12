@@ -19,7 +19,7 @@ When in game.py x-location of pin found, send back ratio of
 (x-loc - leftmost)/distance
 '''
 from game import Game
-from move_baxter import *
+# from move_sawyer import *
 # from segmentation.main import PointcloudProcess, isolate_object_of_interest
 import sys
 import rospy
@@ -58,19 +58,21 @@ def capture_loc(game):
     # return np.mean(lcenters), np.mean(rcenters)
     current_image_info = np.array(game.current_image_info)
     current_image_info = np.array(game.get_current_image_info())
-    xy = np.array(current_image_info)[:,3:]
+    current_image_info = np.array(current_image_info)
+    print(current_image_info)
+    xy = current_image_info[:,3:]
     x = xy[:,0]
     # print(x)
     return x[0], x[1]
 
 def calibrate():
-    # baxter_make_move(5, max=True)
-    # baxter_throw()
+    # sawyer_make_move(5, max=True)
+    # sawyer_throw()
 
     # raw_input("Press any key when done placing right marker")
 
-    # baxter_make_move(-5, max=True)
-    # baxter_throw()
+    # sawyer_make_move(-5, max=True)
+    # sawyer_throw()
 
     # raw_input("Press any key when done placing left marker")
 
@@ -81,13 +83,13 @@ def calibrate():
 
     r = rospy.Rate(1000)
 
-    # game.baxter_move_percent(0)
-    game.baxter_throw()
+    # game.sawyer_move_percent(0)
+    game.sawyer_throw()
 
     raw_input("Press enter when done placing right marker")
 
-    # game.baxter_move_percent(1)
-    game.baxter_throw()
+    # game.sawyer_move_percent(1)
+    game.sawyer_throw()
 
     raw_input("Press enter when done placing left marker")
 

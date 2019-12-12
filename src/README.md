@@ -36,8 +36,6 @@ rosbag play -l src/bagfiles/realsense.bag
 ln -s /scratch/shared/baxter_ws/baxter.sh ~/ros_workspaces/Molkky/
 rosrun tf tf_echo base right_hand
 
-<<<<<<< HEAD
-=======
 At time 1575926809.076
 - Translation: [0.467, -0.433, 0.256]
 - Rotation: in Quaternion [0.921, 0.020, 0.355, 0.157]
@@ -62,7 +60,6 @@ At time 1575926891.256
 		- the set_pose function calls functions in path_planner.py to set the sawyer arm to the desired x position
 		- the x position is determined by interpolating between two points on the edges of the game board
 
->>>>>>> c6c00cea0b92cda53d0403fd96a67fe3f748eae4
 ## to run
 - catkin_make
 - source devel/setup.bash
@@ -96,3 +93,31 @@ At time 1575926891.256
 - Rotation: in Quaternion [0.920, -0.067, 0.383, 0.053]
             in RPY (radian) [3.077, -0.791, -0.118]
             in RPY (degree) [176.290, -45.333, -6.758]
+<<<<<<< HEAD
+=======
+
+v2 higher
+
+At time 1576107439.441
+- Translation: [0.329, -0.591, 0.351]
+- Rotation: in Quaternion [0.995, -0.003, 0.029, 0.093]
+            in RPY (radian) [2.955, -0.059, 0.000]
+            in RPY (degree) [169.308, -3.385, 0.007]
+left
+
+At time 1576107497.481
+- Translation: [0.502, 0.288, 0.247]
+- Rotation: in Quaternion [0.989, -0.045, 0.124, -0.061]
+            in RPY (radian) [-3.006, -0.242, -0.108]
+            in RPY (degree) [-172.210, -13.842, -6.182]
+right
+
+
+
+rosrun intera_interface enable_robot.py -e
+
+rosrun intera_interface joint_trajectory_action_server.py
+
+roslaunch sawyer_moveit_config sawyer_moveit.launch electric_gripper:=true
+
+>>>>>>> 99ebce733aecc6d660acf86658490724b8fe164d
