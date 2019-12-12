@@ -35,7 +35,7 @@ class Game:
 
         self.current_pos = 0
         raw_input("Enter to set initial position ")
-        self.set_initial_pose(self.current_pos)
+        # self.set_initial_pose(self.current_pos)
 
         rospy.Subscriber('image_info', ImageInfo, self.info_callback)
 

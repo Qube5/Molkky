@@ -95,6 +95,23 @@ At time 1575926891.256
             in RPY (radian) [3.077, -0.791, -0.118]
             in RPY (degree) [176.290, -45.333, -6.758]
 
+v2 higher
+
+At time 1576107439.441
+- Translation: [0.329, -0.591, 0.351]
+- Rotation: in Quaternion [0.995, -0.003, 0.029, 0.093]
+            in RPY (radian) [2.955, -0.059, 0.000]
+            in RPY (degree) [169.308, -3.385, 0.007]
+left
+
+At time 1576107497.481
+- Translation: [0.502, 0.288, 0.247]
+- Rotation: in Quaternion [0.989, -0.045, 0.124, -0.061]
+            in RPY (radian) [-3.006, -0.242, -0.108]
+            in RPY (degree) [-172.210, -13.842, -6.182]
+right
+
+
 
 rosrun intera_interface enable_robot.py -e
 

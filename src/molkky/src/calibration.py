@@ -58,7 +58,9 @@ def capture_loc(game):
     # return np.mean(lcenters), np.mean(rcenters)
     current_image_info = np.array(game.current_image_info)
     current_image_info = np.array(game.get_current_image_info())
-    xy = np.array(current_image_info)[:,3:]
+    current_image_info = np.array(current_image_info)
+    print(current_image_info)
+    xy = current_image_info[:,3:]
     x = xy[:,0]
     # print(x)
     return x[0], x[1]

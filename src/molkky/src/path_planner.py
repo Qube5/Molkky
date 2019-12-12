@@ -191,9 +191,12 @@ def set_pose(goal_vec, obstacles = True):
         table_pose.header.frame_id = "base"
 
         #x, y, and z position
+        # table_pose.pose.position.x = 0.15
+        # table_pose.pose.position.y = 0
+        # table_pose.pose.position.z = 0.70
         table_pose.pose.position.x = 0.15
         table_pose.pose.position.y = 0
-        table_pose.pose.position.z = 0.70
+        table_pose.pose.position.z = 0.75
 
         #Orientation as a quaternion
         table_pose.pose.orientation.x = 0.0
@@ -227,9 +230,12 @@ def set_pose(goal_vec, obstacles = True):
             goal.header.frame_id = "base"
 
             #x, y, and z position
-            goal.pose.position.x = 0.6 # save this one: 0.6
+            # goal.pose.position.x = 0.6 # save this one: 0.6
+            # goal.pose.position.y = goal_vec.y
+            # goal.pose.position.z = -.2 # save this one: -.
+            goal.pose.position.x = 0.7 # 
             goal.pose.position.y = goal_vec.y
-            goal.pose.position.z = -.2 # save this one: -.2
+            goal.pose.position.z = 0.3 #
             # goal.pose.position.x = 0.5
             # goal.pose.position.y = goal_vec.y
             # goal.pose.position.z = -0.2
