@@ -30,8 +30,17 @@ from skimage.measure import block_reduce
 import time
 import pdb
 
+color_dict = {
+    "red":    [ 238.99080433,  50.30322062,  72.59746392],
+    "white":  [ 223.34875017, 223.83849807, 225.89653249 ],
+    "yellow":  [ 247.74516109, 223.6023088,  29.2894295],
+    "green": [  56.2907913,  148.41884933, 118.51122211]
+}
+
 this_file = os.path.dirname(os.path.abspath(__file__))
-IMG_DIR = '/'.join(this_file.split('/')[:-2]) + '/img'
+# IMG_DIR = '/'.join(this_file.split('/')[:-2]) + '/img'
+IMG_DIR = '../../img'
+print("directory!! ", IMG_DIR)
 
 def read_image(img_name, grayscale=False):
     """ reads an image
@@ -278,33 +287,6 @@ def cluster_segment(img, n_clusters, random_state=0):
 
     del cluster_colors[0]
 
-    ## GET CONTOURS
-    # # font = cv2.FONT_HERSHEY_COMPLEX
-    # _, contours, _ = cv2.findContours(img_u, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    # # _, contours, _ = cv2.findContours(img_u, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    # print(len(contours))
-    # centers = []
-    # for cnt in contours:
-    #     # approx = cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt, True), True)
-    #     # reduces edges. bigger multiplier yields fewer edges
-    #     approx = cv2.approxPolyDP(cnt, 0.02*cv2.arcLength(cnt, True), True)
-    #     # print(approx)
-    #     # print(len(approx))
-    #     # cv2.drawContours(img_u, [approx], 0, (200), 5)
-    #     # x = approx.ravel()[0]
-    #     # y = approx.ravel()[1]
-
-    #     if len(approx) == 4:
-    #         print("rectangle")
-    #         centers.append(np.mean(approx, axis = 0))
-    #         cv2.drawContours(img_u, [approx], 0, (200), 5) #for debugging. remove later
-    #         # cv2.putText(img_u, "Rectangle", (x, y), font, 1, (0))
-    #     # else:
-    #     #     cv2.drawContours(img_u, [approx], 0, (100), 5)
-
-    #         # cv2.putText(img_u, "not a rectangle", (x, y), font, 1, (0))
-    #     # break
-
     ## GET PIXEL CENTERS of each cluster
     cluster_pixels = {}
     for y in range(len(img_u)):
@@ -322,6 +304,33 @@ def cluster_segment(img, n_clusters, random_state=0):
         center = np.mean(points, axis = 0)
         centers[key] = center
 
+        cX, cY = (int(center[0]), int(center[1]))
+        cv2.circle(img_u, (cX-5, cY-5), 7, (0, 0, 0), -1)
+
+
+    #for debugging color assignments:
+    for name in color_dict.keys():
+        col = color_dict[name]
+        print("original color", col)
+        closest_pin_rgb = [0, 0, 0]
+        closest_pin_distance = 1000000000
+        k=0
+        for i in range(len(cluster_colors.values())):
+            c_col = list(cluster_colors.values())[i]
+            print(c_col)
+            pin_rgb_distance = np.linalg.norm(col - c_col)
+            if pin_rgb_distance < closest_pin_distance:
+                print("color found!")
+                closest_pin_distance = pin_rgb_distance
+                closest_pin_index = i
+                closest_pin_rgb = c_col
+                k = list(cluster_colors.keys())[i]
+        print(name)
+
+        cv2.putText(img_u, name, tuple([int(c) for c in centers[k]]), \
+		      cv2.FONT_HERSHEY_SIMPLEX, 0.8, tuple(closest_pin_rgb), 3)
+
+
     info = {"cluster_centers": centers, "cluster_colors": cluster_colors}
 
     return img_u.astype(np.uint8), info
@@ -335,7 +344,8 @@ def segment_image(img):
     # perform thresholding segmentation
     upper_thresh = 100
     lower_thresh = 10
-    binary = threshold_segment_naive(to_grayscale(img), lower_thresh, upper_thresh).astype(np.uint8)
+    binary = threshold_segment_naive(to_grayscale(img), \
+        lower_thresh, upper_thresh).astype(np.uint8)
 
     # binary = edge_detect_naive(to_grayscale(img)).astype(np.uint8)
 
@@ -474,9 +484,9 @@ def test_cluster_helper(img_names):
     index = 0
     # n_clusters = [2, 3, 5]
     n_clusters = [
-        2
+        # 2
         # 3,
-        # 5
+        5
     ]
     for img_name in img_names:
         test_img_color = read_image(img_name)
@@ -494,7 +504,8 @@ if __name__ == '__main__':
         # IMG_DIR + '/lego.jpg',
         # IMG_DIR + '/staples.jpg',
         # IMG_DIR + '/legos.jpg',
-        IMG_DIR + '/shapes_and_colors.jpg'
+        # IMG_DIR + '/shapes_and_colors.jpg',
+        IMG_DIR + '/pins.png'
     ]
     # print(img_names)
     # uncomment the test you want to run
@@ -504,8 +515,8 @@ if __name__ == '__main__':
     # test_thresh_naive_helper(img_names)
     # test_edge_naive_helper(img_names)
     # test_edge_canny_helper(img_names)
-    # test_cluster_helper(img_names)
-    test_shape_helper(img_names[0])
+    test_cluster_helper(img_names)
+    # test_shape_helper(img_names[0])
 
     # test_edge_naive(test_img)
     # test_edge_canny(test_img)
