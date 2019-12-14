@@ -19,86 +19,42 @@ When in game.py x-location of pin found, send back ratio of
 (x-loc - leftmost)/distance
 '''
 from game import Game
-# from move_sawyer import *
-# from segmentation.main import PointcloudProcess, isolate_object_of_interest
 import sys
 import rospy
-from geometry_msgs.msg import Vector3
 
 import numpy as np
 
 def capture_loc(game):
-    # CAM_INFO_TOPIC = '/camera/color/camera_info'
-    # RGB_IMAGE_TOPIC = '/camera/color/image_raw'
-    # POINTS_TOPIC = '/camera/depth/color/points'
-    # POINTS_PUB_TOPIC = 'segmented_points'
-
-    # rospy.init_node('realsense_listener')
-    # process = PointcloudProcess(POINTS_TOPIC, RGB_IMAGE_TOPIC,
-    #                             CAM_INFO_TOPIC, POINTS_PUB_TOPIC)
-    # r = rospy.Rate(1000)
-
-    # lcenters = np.array([])
-
-    # for i in range(5):
-    #     info, segmented_image, segmented_image_binary = \
-    #         process.capture_once_calibration()
-
-    #     #Calculate center of left and of right, using nearest neighbors to
-    #     #red and blue.
-    #     c1col = info['cluster_colors'][0]
-    #     lind = 0 if (abs(c1col[0] -255)  < abs(c1col[2] - 255)) else 1 #Nearest neighbor of cluster_colors to red, (255, 0, 0)
-    #     rind = 1 - lind #Opposite index of lind
-
-    #     lcenters.append(np.array(info['cluster_centers'][l_ind]))
-    #     rcenters.append(np.array(info['cluster_centers'][r_ind]))
-
-
-    #     r.sleep()
-    # return np.mean(lcenters), np.mean(rcenters)
     current_image_info = np.array(game.current_image_info)
     current_image_info = np.array(game.get_current_image_info())
     current_image_info = np.array(current_image_info)
     print(current_image_info)
     xy = current_image_info[:,3:]
     x = xy[:,0]
-    # print(x)
     return x[0], x[1]
 
 def calibrate():
-    # sawyer_make_move(5, max=True)
-    # sawyer_throw()
-
-    # raw_input("Press any key when done placing right marker")
-
-    # sawyer_make_move(-5, max=True)
-    # sawyer_throw()
-
-    # raw_input("Press any key when done placing left marker")
-
-    # ## Do vision processing to recognize two separate, non-background clusters
-
     rospy.init_node('molkky')
     game = Game(2, 1)
 
     r = rospy.Rate(1000)
 
-    # game.sawyer_move_percent(0)
-    game.sawyer_throw()
-
-    raw_input("Press enter when done placing right marker")
-
-    # game.sawyer_move_percent(1)
+    raw_input("Press enter to move to left limit")
+    game.sawyer_move_percent(0)
     game.sawyer_throw()
 
     raw_input("Press enter when done placing left marker")
 
+    raw_input("Press enter to move to right limit")
+    game.sawyer_move_percent(1)
+    game.sawyer_throw()
+
+    raw_input("Press enter when done placing right marker")
+
     left_loc, right_loc = capture_loc(game)
     print(left_loc, right_loc)
-    # print(game.current_image_info, "current_image_info")
-    return left_loc, right_loc, np.linalg.norm(np.array(right_loc) - np.array(left_loc))
 
+    return left_loc, right_loc, np.linalg.norm(np.array(right_loc) - np.array(left_loc))
 
 if __name__ == "__main__":
     calibrate()
-

@@ -9,13 +9,24 @@ import rospy
 import moveit_commander
 from moveit_msgs.msg import OrientationConstraint, Constraints, CollisionObject
 from geometry_msgs.msg import PoseStamped
+from geometry_msgs.msg import Vector3
+
 from shape_msgs.msg import SolidPrimitive
+from constants import *
+
+assert sys.argv[1] in ("sawyer", "baxter")
+ROBOT = sys.argv[1]
+
+if ROBOT == "baxter":
+    from baxter_interface import Limb
+else:
+    from intera_interface import Limb
 
 class PathPlanner(object):
     """
     Path Planning Functionality for Baxter/Sawyer
 
-    We make this a class rather than a script because it bundles up 
+    We make this a class rather than a script because it bundles up
     all the code relating to planning in a nice way thus, we can
     easily use the code in different places. This is a staple of
     good object-oriented programming
@@ -25,6 +36,7 @@ class PathPlanner(object):
     _scene: moveit_commander.PlanningSceneInterface; the planning scene stores a representation of the environment
     _group: moveit_commander.MoveGroupCommander; the move group is moveit's primary planning class
     _planning_scene_publisher: ros publisher; publishes to the planning scene
+    _goal_position_subscriber: ros subscriber; subcribes to the goal position
 
 
     """
@@ -38,7 +50,7 @@ class PathPlanner(object):
             For Sawyer, this would be 'right_arm'
         """
 
-        # If the node is shutdown, call this function    
+        # If the node is shutdown, call this function
         rospy.on_shutdown(self.shutdown)
 
         # Initialize moveit_commander
@@ -50,7 +62,7 @@ class PathPlanner(object):
         # Initialize the planning scene
         self._scene = moveit_commander.PlanningSceneInterface()
 
-        # This publishes updates to the planning scene
+        This publishes updates to the planning scene
         self._planning_scene_publisher = rospy.Publisher('/collision_object', CollisionObject, queue_size=10)
 
         # Instantiate a move group
@@ -116,7 +128,7 @@ class PathPlanner(object):
         size: 3x' ndarray; (x, y, z) size of the box (in the box's body frame)
         name: unique name of the obstacle (used for adding and removing)
         pose: geometry_msgs/PoseStamped object for the CoM of the box in relation to some frame
-        """    
+        """
 
         # Create a CollisionObject, which will be added to the planning scene
         co = CollisionObject()
@@ -150,7 +162,112 @@ class PathPlanner(object):
 
         self._planning_scene_publisher.publish(co)
 
+def set_initial_pose():
+    y_per = 0.5
+    y_des = min_lim + y_per * (max_lim - min_lim)
+
+    goal_vec = Vector3(0.0, y_des, 0.0)
+    set_pose(goal_vec, False)
+
+def set_pose_incrementally(goal_vec, current_pos):
+    goal_pos = goal_vec.y
+    for inc in np.linspace(0, goal_pos-current_pos, num=3, endpoint=True):
+        if inc != 0:
+            set_pose(Vector3(0.0, current_pos + inc, 0.0))
+
+def set_pose(goal_vec, obstacles = True):
+    planner = PathPlanner("right_arm") # MoveIt path planning class
 
 
-        
-        
+    if obstacles:
+        # ## Add the obstacle to the planning scene here
+        table_size = np.array([0.60, 1.0, 0.10])
+        table_name = "table"
+
+        table_pose = PoseStamped()
+        table_pose.header.frame_id = "base"
+
+        #x, y, and z position
+        # table_pose.pose.position.x = 0.15
+        # table_pose.pose.position.y = 0
+        # table_pose.pose.position.z = 0.70
+        table_pose.pose.position.x = 0.15
+        table_pose.pose.position.y = 0
+        table_pose.pose.position.z = 0.75
+
+        #Orientation as a quaternion
+        table_pose.pose.orientation.x = 0.0
+        table_pose.pose.orientation.y = 0.0
+        table_pose.pose.orientation.z = 0.0
+        table_pose.pose.orientation.w = 1.0
+        planner.add_box_obstacle(table_size, table_name, table_pose)
+    else:
+        planner.remove_obstacle("table")
+
+
+    # we can add obstacles if we choose to do so
+
+    ## Create a path constraint for the arm
+    orien_const = OrientationConstraint()
+    orien_const.link_name = "right_hand";
+    orien_const.header.frame_id = "base";
+    # orien_const.orientation.x = 0.92;
+    orien_const.orientation.y = -1;
+    # orien_const.orientation.y = -1;
+    # orien_const.orientation.z = 0.35;
+    # orien_const.orientation.w = 0.1;
+    orien_const.absolute_x_axis_tolerance = 0.1;
+    orien_const.absolute_y_axis_tolerance = 0.1;
+    orien_const.absolute_z_axis_tolerance = 0.1;
+    orien_const.weight = 1.0;
+
+    while not rospy.is_shutdown():
+        try:
+            goal = PoseStamped()
+            goal.header.frame_id = "base"
+
+            #x, y, and z position
+            # goal.pose.position.x = 0.6 # save this one: 0.6
+            # goal.pose.position.y = goal_vec.y
+            # goal.pose.position.z = -.2 # save this one: -.
+            goal.pose.position.x = 0.7 #
+            goal.pose.position.y = goal_vec.y
+            goal.pose.position.z = 0.3 #
+            # goal.pose.position.x = 0.5
+            # goal.pose.position.y = goal_vec.y
+            # goal.pose.position.z = -0.2
+
+            #Orientation as a quaternion
+            goal.pose.orientation.x = 0
+            goal.pose.orientation.y = -1
+            goal.pose.orientation.z = 0
+            goal.pose.orientation.w = 0
+            # goal.pose.orientation.x = 0.92
+            # goal.pose.orientation.y = 0.0
+            # goal.pose.orientation.z = 0.35
+            # goal.pose.orientation.w = 0.1
+
+            # plan = planner.plan_to_pose(goal, list()) # no constraints
+            plan = planner.plan_to_pose(goal, [orien_const])
+
+            if not planner.execute_plan(plan):
+                raise Exception("Execution failed")
+        except Exception as e:
+            print e
+        else:
+            break
+
+if __name__ == '__main__':
+    rospy.init_node('moveit_node')
+    game = Game(num_players, robot_turn)
+
+    ## TODO : determine goal_positions from computer vision code
+    y_per = float(raw_input("Enter desired y percentage (0, 1): \n"))
+
+    min_lim = max_sawyer_left
+    max_lim = max_sawyer_right
+
+    y_des = min_lim + y_per * (max_lim - min_lim)
+
+    # game.set_initial_pose()
+    game.set_pose(Vector3(0.0, y_des, 0.0))

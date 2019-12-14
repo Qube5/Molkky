@@ -19,8 +19,7 @@ import rospy
 import message_filters
 import ros_numpy
 import tf
-# import json
-# from rospy_message_converter import message_converter
+
 from segmentation.msg import ImageInfo
 from scipy import stats
 
@@ -32,16 +31,13 @@ import cv2
 
 from cv_bridge import CvBridge
 
-from image_segmentation import segment_image, segment_image2
+from image_segmentation import segment_image
 from pointcloud_segmentation import segment_pointcloud
 
 num_pins = 4
 
 
 def get_camera_matrix(camera_info_msg):
-    # TODO: Return the camera intrinsic matrix as a 3x3 numpy array
-    # by retreiving information from the CameraInfo ROS message.
-    # Hint: numpy.reshape may be useful here.
     K = np.reshape(np.array(camera_info_msg.K), (3,3))
     return K
 
@@ -50,7 +46,7 @@ def segmented_image_to_binary(segmented_image):
     return binary
 
 def isolate_object_of_interest(points, image, cam_matrix, trans, rot):
-    segmented_image, info = segment_image2(image, num_pins + 1)
+    segmented_image, info = segment_image(image, num_pins + 1)
     segmented_image_binary = segmented_image_to_binary(segmented_image)
     points = segment_pointcloud(points, segmented_image_binary, cam_matrix, trans, rot)
     return points, segmented_image, info
@@ -61,7 +57,6 @@ def numpy_to_pc2_msg(points):
 
 def numpy_to_img_msg(img):
     return ros_numpy.msgify(Image, img, encoding = 'mono8')
-    # return ros_numpy.msgify(Image, np.array([img, img, img]).reshape(480, 640, 3), encoding = 'rgb8')
 
 def dict_to_img_info_msg(info):
     cluster_colors = info["cluster_colors"]
@@ -91,7 +86,6 @@ class PointcloudProcess:
                        image_sub_topic,
                        cam_info_topic,
                        points_pub_topic):
-
         self.num_steps = 0
 
         self.messages = deque([], 5)
@@ -136,8 +130,8 @@ class PointcloudProcess:
                     tf.ConnectivityException,
                     tf.ExtrapolationException):
                 return
-            points, seg_img, info = isolate_object_of_interest(points, image, info,
-                np.array(trans), np.array(rot))
+            points, seg_img, info = isolate_object_of_interest(points, image,
+                info, np.array(trans), np.array(rot))
             points_msg = numpy_to_pc2_msg(points)
             seg_img_msg = numpy_to_img_msg(seg_img)
             img_info_msg = dict_to_img_info_msg(info)
@@ -147,34 +141,8 @@ class PointcloudProcess:
             self.image_info_pub.publish(img_info_msg)
             print("Published segmented pointcloud at timestamp:",
                    points_msg.header.stamp.secs)
-
-    def capture_once_calibration(self):
-        if self.messages:
-            points, image, cam_matrix = self.messages.pop()
-            try:
-                trans, rot = self.listener.lookupTransform(
-                                                       '/camera_color_optical_frame',
-                                                       '/camera_depth_optical_frame',
-                                                       rospy.Time(0))
-                rot = tf.transformations.quaternion_matrix(rot)[:3, :3]
-            except (tf.LookupException,
-                    tf.ConnectivityException,
-                    tf.ExtrapolationException):
-                return
-            # points, seg_img, info = isolate_object_of_interest(points, image, info,
-            #     np.array(trans), np.array(rot))
-            trans = np.array(trans)
-            rot = np.array(rot)
-
-            segmented_image, info = segment_image2(image, 3)
-            segmented_image_binary = segmented_image_to_binary(segmented_image)
-            # points = segment_pointcloud(points, segmented_image_binary, cam_matrix,
-            #     np.array(trans), np.array(rot))
-            return info, segmented_image, segmented_image_binary
-        else: 
-            print('no message')
-
-
+        else:
+            print('no message received')
 
 def main():
     CAM_INFO_TOPIC = '/camera/color/camera_info'

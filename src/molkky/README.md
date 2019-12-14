@@ -1,9 +1,9 @@
 # Mölkky Package
+- Contains main runners for game including strategy and motion planning
 
-## Launch Directory
-- Contains launch files
-
-## Src Directory
-- Contains publishers and subscribers for 
-
-
+Has the following dependencies
+- rospy
+- roscpp
+- std_msgs
+- geometry_msgs
+- sensor_msgs

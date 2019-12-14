@@ -2,36 +2,24 @@ import numpy as np
 import rospy
 import sys
 
-from game_state import GameState
 from constants import *
 from segmentation.msg import ImageInfo
 from path_planner import PathPlanner
 from geometry_msgs.msg import Vector3
 
-
-def numpy_to_move_msg(move):
-    return ros_numpy.msgify(String, move)
-
 class Game:
     def __init__(self, num_players, robot_turn):
         self.num_players = num_players
-        # self.scores = [0] * num_players
         self.robot_turn = robot_turn
+        self.scores = [0] * num_players
         self.turn = 0
-        self.state = GameState(num_players, robot_turn, initial_board_state)
 
         self.current_image_info = None
 
-        self.planner = PathPlanner("right_arm") # MoveIt path planning class
+        self.planner = PathPlanner("right_arm")
 
-        # # Change port/baud rate later
-        # self.arduino = serial.Serial('/dev/ttyACM0', 9600, timeout=.1)
-        # time.sleep(1) #give the connection a second to settle
-        # self.arduino.write("Hello from Python!")
-
-        raw_input("Enter to set initial position ")
+        raw_input("Enter to move to initial position ")
         self.current_pos = self.set_initial_pose()
-
 
         rospy.Subscriber('image_info', ImageInfo, self.info_callback)
 
@@ -49,49 +37,40 @@ class Game:
             return
         self.current_image_info = info
 
-    def get_current_image_info(self):
-        print("Waiting for current image info...")
-        while not self.current_image_info:
-            print("wait")
-        return self.current_image_info
-
     def take_turn(self):
-        print("\nCurrent Score: " + str(self.state.get_scores()))
+        print("\nCurrent Score: " + str(self.scores))
 
         if not self.current_image_info:
             print("not getting image info")
             return
 
-
         print("Getting pin state")
         board_state = self.get_new_board_state()
-        self.state.update_board_state(board_state)
 
         # Turn starts with strategy then a throw
-        if (self.state.turn == self.state.robot_turn):
+        if (self.turn == self.robot_turn):
             print("Starting Sawyer's Turn")
             print("Analyze board to get the best move")
+
             # using the previous board state to figure out the best move
             # next_move = self.get_best_expected_move_advanced(board_state)
             next_move = self.get_best_expected_move(board_state)
             print("Next move acquired (x position): " + str(next_move))
 
-            # Send move to make move
+            # Have Sawyer make move
             raw_input("Enter for Sawyer to move to position ")
-            self.sawyer_make_move(next_move)
+            self.sawyer_make_move_pos(next_move)
 
             print("Sawyer is moving to position")
             raw_input("Enter once Sawyer is in position ")
 
-            # Sawyer throw using pneumatic launcher
+            # Sawyer throws using pneumatic launcher
             print("Sawyer throw")
             self.sawyer_throw()
         else:
-            print("Player " + str(self.state.turn) + "'s turn")
-            print("Player " + str(self.state.turn) + ". Throw")
-            # input("Enter once throw is done")
-            a = raw_input("Enter once throw is done")
-            # raw_input("Enter desired y percentage (0, 1): \n")
+            print("Player " + str(self.turn) + "'s turn")
+            print("Player " + str(self.turn) + ". Throw")
+            raw_input("Enter once throw is done")
 
         print("Please set pins upright after the throw")
         raw_input("Enter once pins are righted ")
@@ -99,11 +78,19 @@ class Game:
         points_gained = self.score_board()
 
         print("Updating state with new score")
-        self.state.increment_score(points_gained)
+        self.increment_score(points_gained)
         print("Score updated")
 
-        self.state.next_turn()
-        self.prev_board_state = board_state
+        self.next_turn()
+
+    def increment_score(self):
+        curr_score = self.scores[self.turn]
+        score = curr_score + points_gained
+        score = score if score <= winning_score else back_score
+        self.scores[self.turn] = score
+
+    def next_turn(self):
+        self.turn = (self.turn + 1) % self.num_players
 
     def score_board(self):
         score = -1
@@ -130,21 +117,19 @@ class Game:
         return board_state
 
     def get_best_expected_move(self, board_state):
-
         ## Get best pin to knock down
-        current_score = self.state.get_scores()[self.robot_turn]
+        current_score = self.scores[self.robot_turn]
         optimal_points = winning_score - current_score
 
         if largest_pin_value <= optimal_points:
             best_pin_points = largest_pin_value
         else:
             best_pin_points = optimal_points
-        # print("POINTS", optimal_points, best_pin_points)
+
         key_list = list(color_points.keys())
         val_list = list(color_points.values())
         best_pin_color = key_list[val_list.index(best_pin_points)]
         best_pin_rgb = np.array(color_dict[best_pin_color])
-        # print(best_pin_color, best_pin_rgb)
 
         ## Get index of best pin
         closest_pin_rgb = best_pin_rgb
@@ -157,15 +142,14 @@ class Game:
                 closest_pin_distance = pin_rgb_distance
                 closest_pin_index = i
                 closest_pin_rgb = pin_rgb
-            # print('xloc of pin i', board_state[i][3], pin_rgb_distance, pin_rgb)
-        # print(closest_pin_rgb)
+
         closest_pin_loc = board_state[closest_pin_index][3:]
         closest_pin_x = closest_pin_loc[0]
 
         return closest_pin_x
 
     def get_best_expected_move_advanced(self, pins):
-        current_score = self.state.get_scores()[self.robot_turn]
+        current_score = self.scores[self.robot_turn]
         max_possible = 0
         max_desired = winning_score - current_score
         best_pin_idx = 0
@@ -179,25 +163,6 @@ class Game:
                     best_pin_idx = i
                     max_possible = max(curr_pin_value, num_near_pins)
         return pins[best_pin_idx][0]
-
-    # def get_best_expected_move(self, pins):
-    #     current_score = self.scores[self.robot_turn]
-    #     max_possible = 0
-    #     max_desired = winning_score - current_score
-    #     best_pin_idx = 0
-    #     for i in range(len(pins)):
-    #         curr_pin_value = self.get_pin_value(pins[i][2:])
-    #         num_near_pins = self.num_pins_near_pin(i, pins)
-    #         if num_near_pins > 1:
-    #             curr_pin_value = 0
-    #         if curr_pin_value > max_possible or num_near_pins > max_possible:
-    #             if curr_pin_value <= max_desired or num_near_pins <= max_desired:
-    #                 best_pin_idx = i
-    #                 max_possible = max(curr_pin_value, num_near_pins)
-    #     print(self.get_pin_value(pins[best_pin_idx][2:]))
-    #     return pins[best_pin_idx][0]
-        # print(self.get_pin_value(pins[best_pin_idx][2:]))
-        # return pins[best_pin_idx][0]
 
     def get_pin_value(self, rgb):
         rgb = np.array(rgb)
@@ -217,8 +182,7 @@ class Game:
         x = int(math.floor(pins[pin_idx][0]))
         buf = 30
         num_pins = 0
-        # print(pins)
-        # print(x, type(x))
+
         for p in range(len(pins)):
             if p != pin_idx:
                 if int(pins[p][3]) in range(x - buf, x + buf):
@@ -226,75 +190,26 @@ class Game:
 
         return num_pins
 
-    def sawyer_make_move(self, move):
-        pixel_x = move
-        x_ratio = (pixel_x - max_x_pixel_left) / (max_x_pixel_right - max_x_pixel_left)
+    def sawyer_make_move_pos(self, pixel_x):
+        x_per = self.pos_to_per(pixel_x, max_x_pixel_left, max_x_pixel_right)
+        self.sawyer_make_move_per(x_per)
 
-        ## CONVERT move (x coordinate) to robot-x-axis coordinate
-        print("MOVE", move, x_ratio)
-        # print(move)
+    def sawyer_make_move_per(self, y_per, camera_same_side = False):
+        if camera_same_side:
+            y_per = 1 - y_per
 
-        # rospy.init_node('moveit_node')
-        # raw_input("Enter once throw is done")
+        y_des = self.per_to_pos(y_per, max_sawyer_left, max_sawyer_right)
+        num_steps = 3
+        self.set_pose_incrementally(Vector3(0.0, y_des, 0.0), self.current_pos, num_steps)
+        self.current_pos = y_des
 
-        # ## TODO : determine goal_positions from computer vision code
-        # # y_goal = float(raw_input("Enter desired y position: \n"))
-        y_per = x_ratio
-        self.sawyer_move_percent(y_per)
-        # # # interpolate percentage between -0.5 and 0.3
-        # min_lim = max_sawyer_left
-        # max_lim = max_sawyer_right
-
-        # y_des = min_lim + y_per * (max_lim - min_lim)
-        # # set_pose(Vector3(0.0, y_goal, 0.0))
-        # # self.set_pose(Vector3(0.0, y_des, 0.0))
-        # self.set_pose_incrementally(Vector3(0.0, y_des, 0.0), self.current_pos, 3)
-        # self.current_pos = y_des
-        # TODO BIANCA
-        # return None
-
-    def sawyer_move_percent(self, move_percent, camera_opposite = True):
-        print(move_percent)
-        # if camera_opposite:
-        #     move_percent = 1 - move_percent
-
-        y_per = move_percent
-        # print(move_percent)
-
-        # # interpolate percentage between -0.5 and 0.3
-        min_lim = -0.2
-        max_lim = 0.5
-        y_des = min_lim + y_per * (max_lim - min_lim)
-        # set_pose(Vector3(0.0, y_goal, 0.0))
-        set_pose(Vector3(0.0, y_des, 0.0))
-        ## CONVERT robot-x-axis coordinate to robot move vector
-
-        # move_msg = numpy_to_move_msg(move)
-        # self.move_pub.publish(move_msg)
-        # self.move_pub.publish(move)
-        # TODO BIANCA
-        return None
-
-    def set_pose_incrementally(self, goal_vec, current_pos, num_steps):
-        goal_pos = goal_vec.y
-        for inc in np.linspace(0, goal_pos-current_pos, num=3, endpoint=True):
-            if inc != 0:
-                self.set_pose(Vector3(0.0, current_pos + inc, 0.0))
-
-    def set_initial_pose(self, initial_y_per = 0.5):
-        min_lim = max_sawyer_left
-        max_lim = max_sawyer_right
-        initial_y = min_lim + initial_y_per * (max_lim - min_lim)
-        goal_vec = Vector3(0.0, initial_y, 0.0)
-        self.set_pose(goal_vec, False)
-        return initial_y
-
-    def add_obstacle(self, size = [0.60, 1.0, 0.10], x = .15, y=0, z=0.75):
+    def add_obstacle(self, size = [0.60, 1.0, 0.10], x = .15, y = 0, z = 0.75,
+                     obstacle_name = "table", frame_id = "base"):
         table_size = np.array(size)
-        table_name = "table"
+        table_name = obstacle_name
 
         table_pose = PoseStamped()
-        table_pose.header.frame_id = "base"
+        table_pose.header.frame_id = frame_id
 
         #x, y, and z position
         table_pose.pose.position.x = x
@@ -328,7 +243,6 @@ class Game:
         return constraints
 
     def set_pose(self, goal_vec, obstacle = True):
-
         # we can add obstacles if we choose to do so
         if obstacle:
             self.add_obstacle()
@@ -343,9 +257,9 @@ class Game:
                 goal.header.frame_id = "base"
 
                 #x, y, and z position
-                goal.pose.position.x = 0.7 # save this one: 0.6
+                goal.pose.position.x = throw_x_pos
                 goal.pose.position.y = goal_vec.y
-                goal.pose.position.z = 0.3 # save this one: -.2
+                goal.pose.position.z = throw_z_pos
 
                 #Orientation as a quaternion
                 goal.pose.orientation.x = 0
@@ -362,11 +276,25 @@ class Game:
             else:
                 break
 
+    def set_pose_incrementally(self, goal_vec, current_pos, num_steps):
+        goal_pos = goal_vec.y
+        for inc in np.linspace(0, goal_pos-current_pos, num=3, endpoint=True):
+            if inc == 0:
+                continue
+            self.set_pose(Vector3(0.0, current_pos + inc, 0.0))
+
+    def set_initial_pose(self, y_per = 0.5):
+        initial_y = self.per_to_pos(y_per, max_sawyer_left, max_sawyer_right)
+        goal_vec = Vector3(0.0, initial_y, 0.0)
+        self.set_pose(goal_vec, False)
+        return initial_y
+
     def sawyer_throw(self):
         raw_input("LAUNCH pin! Press Enter when done ")
         print("Thrown")
-        # for i in range(25):
-        #     self.arduino.write(1)
-        #     # arduino.write("throw".encode())
-        # self.arduino.write("".encode())
-        return True
+
+    def pos_to_per(self, pos, lower, upper):
+        return (pos - lower) / (upper - lower)
+
+    def per_to_pos(self, per, lower, upper):
+        return lower + per * (upper - lower)
