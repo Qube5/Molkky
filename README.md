@@ -11,7 +11,7 @@ We are modifying the game to scaled down foam pieces and play indoors on a table
 [![Molkky Rules](https://img.youtube.com/vi/S65up-hEmaI/0.jpg)](https://www.youtube.com/watch?v=S65up-hEmaI)
 
 ## Sawyer plays Molkky
-[![Sawyer plays Molkky](https://www.youtube.com/watch?v=5wgZ72Oa4w0)](https://www.youtube.com/watch?v=5wgZ72Oa4w0)
+[![Sawyer plays Molkky](https://img.youtube.com/vi/5wgZ72Oa4w0/0.jpg)](https://www.youtube.com/watch?v=5wgZ72Oa4w0)
 
 ## Project Overview
 #### Vision 
@@ -33,4 +33,4 @@ We are modifying the game to scaled down foam pieces and play indoors on a table
 - Manufactured game board and pieces to optimize vision algorithms
 
 # Getting Started
-- see src/README.md
+- see [src/README.md](https://github.com/Qube5/Molkky/edit/master/src)
