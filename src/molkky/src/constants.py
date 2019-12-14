@@ -1,7 +1,7 @@
 import numpy as np
 
-winning_score = 20
-back_score = 10
+winning_score = 10
+back_score = winning_score//2
 
 # initial board state:
 #    7 9 8
@@ -52,15 +52,21 @@ color_dict = {
 # }
 color_points = {
     "red":    4,
-    "white":  2,
-    "green":  1,
-    "yellow": 3
+    "white":  1,
+    "green":  3,
+    "yellow": 2
 }
 
 max_x_pixel_left = 0
-max_x_pixel_right = 1280
+max_x_pixel_right = 600
 
-max_sawyer_left = -0.2
-max_sawyer_right = 0.5
+max_sawyer_left = 0
+max_sawyer_right = 0.35
+# max_sawyer_left = 0
+# max_sawyer_right = 0.3
+# max_sawyer_left = -0.17
+# max_sawyer_right = 0.17
+# max_sawyer_left = -0.2
+# max_sawyer_right = 0.2
 
 largest_pin_value = max(color_points.values())

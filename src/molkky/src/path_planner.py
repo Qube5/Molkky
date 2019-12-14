@@ -168,7 +168,9 @@ class PathPlanner(object):
         self._planning_scene_publisher.publish(co)
 
 def set_initial_pose():
-    y_des = 0
+    y_per = 0.5
+    y_des = min_lim + y_per * (max_lim - min_lim)
+
     goal_vec = Vector3(0.0, y_des, 0.0)
     set_pose(goal_vec, False)
 
@@ -265,8 +267,8 @@ if __name__ == '__main__':
     y_per = float(raw_input("Enter desired y percentage (0, 1): \n"))
 
     # interpolate percentage between -0.5 and 0.3
-    min_lim = -0.2
-    max_lim = 0.5
+    min_lim = 0
+    max_lim = 0.4
 
     y_des = min_lim + y_per * (max_lim - min_lim)
 

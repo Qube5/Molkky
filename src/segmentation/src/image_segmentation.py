@@ -40,7 +40,7 @@ color_dict = {
 this_file = os.path.dirname(os.path.abspath(__file__))
 # IMG_DIR = '/'.join(this_file.split('/')[:-2]) + '/img'
 IMG_DIR = '../../img'
-print("directory!! ", IMG_DIR)
+# print("directory!! ", IMG_DIR)
 
 def read_image(img_name, grayscale=False):
     """ reads an image
@@ -311,21 +311,21 @@ def cluster_segment(img, n_clusters, random_state=0):
     #for debugging color assignments:
     for name in color_dict.keys():
         col = color_dict[name]
-        print("original color", col)
+        # print("original color", col)
         closest_pin_rgb = [0, 0, 0]
         closest_pin_distance = 1000000000
         k=0
         for i in range(len(cluster_colors.values())):
             c_col = list(cluster_colors.values())[i]
-            print(c_col)
+            # print(c_col)
             pin_rgb_distance = np.linalg.norm(col - c_col)
             if pin_rgb_distance < closest_pin_distance:
-                print("color found!")
+                # print("color found!")
                 closest_pin_distance = pin_rgb_distance
                 closest_pin_index = i
                 closest_pin_rgb = c_col
                 k = list(cluster_colors.keys())[i]
-        print(name)
+        # print(name)
 
         cv2.putText(img_u, name, tuple([int(c) for c in centers[k]]), \
 		      cv2.FONT_HERSHEY_SIMPLEX, 0.8, tuple(closest_pin_rgb), 3)
