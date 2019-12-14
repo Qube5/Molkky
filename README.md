@@ -1,4 +1,4 @@
-For more information, please see molkky.weebly.com
+For more information, please see [molkky.weebly.com](molkky.weebly.com)
 
 # Mölkky
 Baxter Robot plays [Molkky](https://en.wikipedia.org/wiki/Mölkky), a Finnish lawn game. Berkeley EECS 106A Project Fall 2019
