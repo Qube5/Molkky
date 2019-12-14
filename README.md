@@ -1,4 +1,4 @@
-Skip to the exciting stuff: [src/molkky/src](https://github.com/Qube5/Molkky/tree/master/src/molkky/src)
+For more information, please see molkky.weebly.com
 
 # Mölkky
 Baxter Robot plays [Molkky](https://en.wikipedia.org/wiki/Mölkky), a Finnish lawn game. Berkeley EECS 106A Project Fall 2019
@@ -10,6 +10,9 @@ We are modifying the game to scaled down foam pieces and play indoors on a table
 ## Molkky Rules Overview
 [![Molkky Rules](https://img.youtube.com/vi/S65up-hEmaI/0.jpg)](https://www.youtube.com/watch?v=S65up-hEmaI)
 
+## Sawyer plays Molkky
+[![Sawyer plays Molkky](https://www.youtube.com/watch?v=5wgZ72Oa4w0)](https://www.youtube.com/watch?v=5wgZ72Oa4w0)
+
 ## Project Overview
 #### Vision 
 - Find pins, read pin score values 
@@ -18,21 +21,16 @@ We are modifying the game to scaled down foam pieces and play indoors on a table
 - Calculate optimal expected move based on move choices and likelihood of achieving moves
 
 #### Projectile Trajectory Planning
-- Calculate 'pin' trajectory using projectile motion. Use this to extract toss velocity and angle
+- Calculate pin trajectory using projectile motion. Use this to extract toss velocity and angle
 
 #### Forward Kinematics & Motion Planning
-- Baxter performs tossing motion
+- Baxter moves to location and launches pin
 
 #### Physical Modifications
-- Gripper for Baxter to hold and release toss pin
+- Custom Gripper for Baxter to hold and launch toss pin
 
 #### Other Manufacturing
-- Make game board and game pieces
-
-#### Additional Reach Goals:
-- Have Baxter able to reset pins
-- Baxter can reload his toss pin
+- Manufactured game board and pieces to optimize vision algorithms
 
 # Getting Started
-- Clone Repo
-- Run Launch File
+- see src/README.md
