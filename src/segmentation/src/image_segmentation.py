@@ -30,8 +30,17 @@ from skimage.measure import block_reduce
 import time
 import pdb
 
+color_dict = {
+    "red":    [ 238.99080433,  50.30322062,  72.59746392],
+    "white":  [ 223.34875017, 223.83849807, 225.89653249 ],
+    "yellow":  [ 247.74516109, 223.6023088,  29.2894295],
+    "green": [  56.2907913,  148.41884933, 118.51122211]
+}
+
 this_file = os.path.dirname(os.path.abspath(__file__))
-IMG_DIR = '/'.join(this_file.split('/')[:-2]) + '/img'
+# IMG_DIR = '/'.join(this_file.split('/')[:-2]) + '/img'
+IMG_DIR = '../../img'
+# print("directory!! ", IMG_DIR)
 
 def read_image(img_name, grayscale=False):
     """ reads an image
@@ -208,14 +217,9 @@ def cluster_segment(img, n_clusters, random_state=0):
     # Do this only if clustering in HSV space isbetter
     # img = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
 
-
     # Downsample img first using the mean to speed up K-means
-
-
-
     img_d = block_reduce(img, block_size=(2, 2, 1), func=np.mean)
-
-    img_d = cv2.GaussianBlur(img_d,(5,5),0)
+    img_d = cv2.GaussianBlur(img_d, (5, 5), 0)
 
 
 
@@ -237,7 +241,7 @@ def cluster_segment(img, n_clusters, random_state=0):
     kmeans = KMeans(n_clusters, random_state=random_state).fit(img_r)#[:,:3].reshape((img_d.shape[0]*img_d.shape[1], 2)))
     # print(kmeans)
     # get the labeled cluster image using kmeans.labels_
-    clusters = kmeans.labels_  
+    clusters = kmeans.labels_
     # print(len(set(clusters)))
     ### CHECK CLUSTER MEANS!! ###
     ### PUBLISH KMEANS IMAGE ###
@@ -283,33 +287,6 @@ def cluster_segment(img, n_clusters, random_state=0):
 
     del cluster_colors[0]
 
-    ## GET CONTOURS
-    # # font = cv2.FONT_HERSHEY_COMPLEX
-    # _, contours, _ = cv2.findContours(img_u, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    # # _, contours, _ = cv2.findContours(img_u, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-    # print(len(contours))
-    # centers = []
-    # for cnt in contours:
-    #     # approx = cv2.approxPolyDP(cnt, 0.01*cv2.arcLength(cnt, True), True)
-    #     # reduces edges. bigger multiplier yields fewer edges
-    #     approx = cv2.approxPolyDP(cnt, 0.02*cv2.arcLength(cnt, True), True)
-    #     # print(approx)
-    #     # print(len(approx))
-    #     # cv2.drawContours(img_u, [approx], 0, (200), 5)
-    #     # x = approx.ravel()[0]
-    #     # y = approx.ravel()[1]
-
-    #     if len(approx) == 4:
-    #         print("rectangle")
-    #         centers.append(np.mean(approx, axis = 0))
-    #         cv2.drawContours(img_u, [approx], 0, (200), 5) #for debugging. remove later
-    #         # cv2.putText(img_u, "Rectangle", (x, y), font, 1, (0))
-    #     # else:
-    #     #     cv2.drawContours(img_u, [approx], 0, (100), 5)
-
-    #         # cv2.putText(img_u, "not a rectangle", (x, y), font, 1, (0))
-    #     # break 
-
     ## GET PIXEL CENTERS of each cluster
     cluster_pixels = {}
     for y in range(len(img_u)):
@@ -327,6 +304,33 @@ def cluster_segment(img, n_clusters, random_state=0):
         center = np.mean(points, axis = 0)
         centers[key] = center
 
+        cX, cY = (int(center[0]), int(center[1]))
+        cv2.circle(img_u, (cX-5, cY-5), 7, (0, 0, 0), -1)
+
+
+    #for debugging color assignments:
+    for name in color_dict.keys():
+        col = color_dict[name]
+        # print("original color", col)
+        closest_pin_rgb = [0, 0, 0]
+        closest_pin_distance = 1000000000
+        k=0
+        for i in range(len(cluster_colors.values())):
+            c_col = list(cluster_colors.values())[i]
+            # print(c_col)
+            pin_rgb_distance = np.linalg.norm(col - c_col)
+            if pin_rgb_distance < closest_pin_distance:
+                # print("color found!")
+                closest_pin_distance = pin_rgb_distance
+                closest_pin_index = i
+                closest_pin_rgb = c_col
+                k = list(cluster_colors.keys())[i]
+        # print(name)
+
+        cv2.putText(img_u, name, tuple([int(c) for c in centers[k]]), \
+		      cv2.FONT_HERSHEY_SIMPLEX, 0.8, tuple(closest_pin_rgb), 3)
+
+
     info = {"cluster_centers": centers, "cluster_colors": cluster_colors}
 
     return img_u.astype(np.uint8), info
@@ -340,7 +344,8 @@ def segment_image(img):
     # perform thresholding segmentation
     upper_thresh = 100
     lower_thresh = 10
-    binary = threshold_segment_naive(to_grayscale(img), lower_thresh, upper_thresh).astype(np.uint8)
+    binary = threshold_segment_naive(to_grayscale(img), \
+        lower_thresh, upper_thresh).astype(np.uint8)
 
     # binary = edge_detect_naive(to_grayscale(img)).astype(np.uint8)
 
@@ -362,12 +367,63 @@ def segment_image2(img, num_clusters):
     binary, info = cluster_segment(img, num_clusters)
     binary = binary.astype(np.uint8)
 
-    ## Instead of this, iterate over clusters and assign background to be 
+    ## Instead of this, iterate over clusters and assign background to be
     ## cluster with most pixels assigned, assign 1 to all others
     # if np.mean(binary) > 0.5:
     #     binary = 1 - binary #invert the pixels if K-Means assigned 1's to background, and 0's to foreground
 
+
+
     return binary, info
+
+def segment_image_shape(img, num_clusters):
+    # ONLY USE ONE THRESHOLDING METHOD
+
+    #Include file names of shapes
+    # paths = ['shape1.jpg', 'shape2.jpg', 'shape3.jpg', 'shape4.jpg']
+    paths = ['/pent.jpg', '/rect.jpg']
+    print(cv2.imread(IMG_DIR + '/lego.jpg'))
+    ims_to_match = [read_image(IMG_DIR + s) for s in paths]
+    print(img)
+    print(ims_to_match)
+
+    shapes_to_match = [cv2.findContours(im.copy(), cv2.RETR_EXTERNAL, \
+    	cv2.CHAIN_APPROX_SIMPLE) for im in ims_to_match]
+
+
+    # perform clustering segmentation (make image binary)
+    # binary = cluster_segment(img, 3).astype(np.uint8) / 255
+    binary, info = cluster_segment(img, 2)
+    binary = binary.astype(np.uint8)
+    cv2.imwrite(IMG_DIR + "/shapes_binary.jpg", binary)
+
+    ## Instead of this, iterate over clusters and assign background to be
+    ## cluster with most pixels assigned, assign 1 to all others
+    # if np.mean(binary) > 0.5:
+    #     binary = 1 - binary #invert the pixels if K-Means assigned 1's to background, and 0's to foreground
+
+    # find contours in the thresholded image and initialize the
+    # shape detector
+    cnts = cv2.findContours(binary.copy(), cv2.RETR_EXTERNAL, \
+    	cv2.CHAIN_APPROX_SIMPLE)
+    cnts = imutils.grab_contours(cnts)
+
+    # Calculate Moments
+    moments = cv2.moments(binary)
+
+    shape_centers = {}
+
+    for i in range(len(shapes_to_match)):
+        matched_cnt = cnts[np.argmin([matchShapes(shape, cnt, CONTOURS_MATCH_I3, 0) \
+                        for cnt in cnts])]
+        M = cv2.moments(matched_cnt)
+        cX = int(M["m10"] / M["m00"])
+        cY = int(M["m01"] / M["m00"])
+
+        shape_centers[paths[i][:-4]] = (cX, cY)
+
+
+    return binary, info, shape_centers
 
 """
 below are tests used for sanity checking you image, edit as you see appropriate
@@ -397,6 +453,14 @@ def test_cluster(img, n_clusters):
     clusters = cv2.imread(IMG_DIR + '/cluster.jpg')
     show_image(clusters, title='cluster')
 
+def test_shape_clustering(img):
+    clusters, info = segment_image_shape(img, 2)
+    clusters = clusters.astype(np.uint8)
+
+    cv2.imwrite(IMG_DIR + "/cluster.jpg", clusters)
+    clusters = cv2.imread(IMG_DIR + '/cluster.jpg')
+    show_image(clusters, title='cluster')
+
 def test_thresh_naive_helper(img_names):
     index = 0
     uppers = [105, 100, 220]
@@ -420,8 +484,8 @@ def test_cluster_helper(img_names):
     index = 0
     # n_clusters = [2, 3, 5]
     n_clusters = [
-        # 2, 
-        # 3, 
+        # 2
+        # 3,
         5
     ]
     for img_name in img_names:
@@ -429,12 +493,19 @@ def test_cluster_helper(img_names):
         test_cluster(test_img_color, n_clusters[index])
         index += 1
 
+def test_shape_helper(img_name):
+
+    test_img_color = read_image(img_name)
+    test_shape_clustering(test_img_color)
+
 if __name__ == '__main__':
     # adjust the file names here
     img_names = [
         # IMG_DIR + '/lego.jpg',
         # IMG_DIR + '/staples.jpg',
-        IMG_DIR + '/legos.jpg'
+        # IMG_DIR + '/legos.jpg',
+        # IMG_DIR + '/shapes_and_colors.jpg',
+        IMG_DIR + '/pins.png'
     ]
     # print(img_names)
     # uncomment the test you want to run
@@ -445,6 +516,7 @@ if __name__ == '__main__':
     # test_edge_naive_helper(img_names)
     # test_edge_canny_helper(img_names)
     test_cluster_helper(img_names)
+    # test_shape_helper(img_names[0])
 
     # test_edge_naive(test_img)
     # test_edge_canny(test_img)

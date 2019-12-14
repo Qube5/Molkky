@@ -1,7 +1,7 @@
 import numpy as np
 
-winning_score = 50
-back_score = 25
+winning_score = 10
+back_score = winning_score//2
 
 # initial board state:
 #    7 9 8
@@ -31,16 +31,10 @@ initial_board_state = np.array([
 #     "yellow": [  79.69086543,    162.84051154, 128.22068341]
 # }
 color_dict = {
-<<<<<<< HEAD
-    "red":      [255,   0,   0],
-    "green":    [  0, 255,   0],
-    "blue":     [  0,   0, 255]
-=======
     "red":    [ 238.99080433,  50.30322062,  72.59746392],
     "white":  [ 223.34875017, 223.83849807, 225.89653249 ],
     "yellow":  [ 247.74516109, 223.6023088,  29.2894295],
     "green": [  56.2907913,  148.41884933, 118.51122211]
->>>>>>> 99ebce733aecc6d660acf86658490724b8fe164d
 }
 # [[223.34875017 223.83849807 225.89653249 434.67238184 311.99428483]
 #  [238.99080433  50.30322062  72.59746392 541.9518724  181.41539528]
@@ -57,19 +51,22 @@ color_dict = {
 #     "blue":     1
 # }
 color_points = {
-<<<<<<< HEAD
-    "red":      3,
-    "green":    2,
-    "blue":     1
-=======
     "red":    4,
-    "white":  2,
-    "green":  1,
-    "yellow": 3
->>>>>>> 99ebce733aecc6d660acf86658490724b8fe164d
+    "white":  1,
+    "green":  3,
+    "yellow": 2
 }
 
 max_x_pixel_left = 0
-max_x_pixel_right = 1280
+max_x_pixel_right = 600
+
+max_sawyer_left = 0
+max_sawyer_right = 0.35
+# max_sawyer_left = 0
+# max_sawyer_right = 0.3
+# max_sawyer_left = -0.17
+# max_sawyer_right = 0.17
+# max_sawyer_left = -0.2
+# max_sawyer_right = 0.2
 
 largest_pin_value = max(color_points.values())

@@ -93,8 +93,6 @@ At time 1575926891.256
 - Rotation: in Quaternion [0.920, -0.067, 0.383, 0.053]
             in RPY (radian) [3.077, -0.791, -0.118]
             in RPY (degree) [176.290, -45.333, -6.758]
-<<<<<<< HEAD
-=======
 
 v2 higher
 
@@ -118,6 +116,4 @@ rosrun intera_interface enable_robot.py -e
 
 rosrun intera_interface joint_trajectory_action_server.py
 
-roslaunch sawyer_moveit_config sawyer_moveit.launch electric_gripper:=true
-
->>>>>>> 99ebce733aecc6d660acf86658490724b8fe164d
+roslaunch sawyer_moveit_config sawyer_moveit.launch electric_gripper:=false

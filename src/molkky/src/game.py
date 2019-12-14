@@ -15,7 +15,7 @@ def numpy_to_move_msg(move):
 class Game:
     def __init__(self, num_players, robot_turn):
         self.num_players = num_players
-        self.scores = [0] * num_players
+        # self.scores = [0] * num_players
         self.robot_turn = robot_turn
         self.turn = 0
         self.state = GameState(num_players, robot_turn, initial_board_state)
@@ -29,9 +29,9 @@ class Game:
         # time.sleep(1) #give the connection a second to settle
         # self.arduino.write("Hello from Python!")
 
-        self.current_pos = 0
         raw_input("Enter to set initial position ")
-        self.set_initial_pose(self.current_pos)
+        self.current_pos = self.set_initial_pose()
+
 
         rospy.Subscriber('image_info', ImageInfo, self.info_callback)
 
@@ -72,8 +72,9 @@ class Game:
             print("Starting Sawyer's Turn")
             print("Analyze board to get the best move")
             # using the previous board state to figure out the best move
+            # next_move = self.get_best_expected_move_advanced(board_state)
             next_move = self.get_best_expected_move(board_state)
-            print("Next move acquired (x position)", next_move)
+            print("Next move acquired (x position): " + str(next_move))
 
             # Send move to make move
             raw_input("Enter for Sawyer to move to position ")
@@ -131,19 +132,19 @@ class Game:
     def get_best_expected_move(self, board_state):
 
         ## Get best pin to knock down
-        current_score = self.scores[self.robot_turn]
+        current_score = self.state.get_scores()[self.robot_turn]
         optimal_points = winning_score - current_score
 
         if largest_pin_value <= optimal_points:
             best_pin_points = largest_pin_value
         else:
             best_pin_points = optimal_points
-
+        # print("POINTS", optimal_points, best_pin_points)
         key_list = list(color_points.keys())
         val_list = list(color_points.values())
         best_pin_color = key_list[val_list.index(best_pin_points)]
         best_pin_rgb = np.array(color_dict[best_pin_color])
-        print(best_pin_color)
+        # print(best_pin_color, best_pin_rgb)
 
         ## Get index of best pin
         closest_pin_rgb = best_pin_rgb
@@ -156,18 +157,15 @@ class Game:
                 closest_pin_distance = pin_rgb_distance
                 closest_pin_index = i
                 closest_pin_rgb = pin_rgb
-        print(closest_pin_rgb)
-        closest_pin_loc = board_state[i][3:]
+            # print('xloc of pin i', board_state[i][3], pin_rgb_distance, pin_rgb)
+        # print(closest_pin_rgb)
+        closest_pin_loc = board_state[closest_pin_index][3:]
         closest_pin_x = closest_pin_loc[0]
 
         return closest_pin_x
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-    def baxter_make_move(self, move):
-=======
-    def get_best_expected_move(self, pins):
-        current_score = self.scores[self.robot_turn]
+    def get_best_expected_move_advanced(self, pins):
+        current_score = self.state.get_scores()[self.robot_turn]
         max_possible = 0
         max_desired = winning_score - current_score
         best_pin_idx = 0
@@ -180,9 +178,8 @@ class Game:
                 if curr_pin_value <= max_desired or num_near_pins <= max_desired:
                     best_pin_idx = i
                     max_possible = max(curr_pin_value, num_near_pins)
-
         return pins[best_pin_idx][0]
-=======
+
     # def get_best_expected_move(self, pins):
     #     current_score = self.scores[self.robot_turn]
     #     max_possible = 0
@@ -199,7 +196,8 @@ class Game:
     #                 max_possible = max(curr_pin_value, num_near_pins)
     #     print(self.get_pin_value(pins[best_pin_idx][2:]))
     #     return pins[best_pin_idx][0]
->>>>>>> 99ebce733aecc6d660acf86658490724b8fe164d
+        # print(self.get_pin_value(pins[best_pin_idx][2:]))
+        # return pins[best_pin_idx][0]
 
     def get_pin_value(self, rgb):
         rgb = np.array(rgb)
@@ -220,17 +218,15 @@ class Game:
         buf = 30
         num_pins = 0
         # print(pins)
-        print(x, type(x))
-        for px in range(x - buf, x + buf):
-            for p in range(len(pins)):
-                if p != pin_idx:
-                    if pins[p][0] == px:
-                        num_pins = num_pins + 1
+        # print(x, type(x))
+        for p in range(len(pins)):
+            if p != pin_idx:
+                if int(pins[p][3]) in range(x - buf, x + buf):
+                    num_pins = num_pins + 1
 
         return num_pins
 
     def sawyer_make_move(self, move):
->>>>>>> c6c00cea0b92cda53d0403fd96a67fe3f748eae4
         pixel_x = move
         x_ratio = (pixel_x - max_x_pixel_left) / (max_x_pixel_right - max_x_pixel_left)
 
@@ -259,11 +255,11 @@ class Game:
 
     def sawyer_move_percent(self, move_percent, camera_opposite = True):
         print(move_percent)
-        if camera_opposite:
-            move_percent = 1 - move_percent
+        # if camera_opposite:
+        #     move_percent = 1 - move_percent
 
         y_per = move_percent
-        print(move_percent)
+        # print(move_percent)
 
         # # interpolate percentage between -0.5 and 0.3
         min_lim = -0.2
@@ -285,9 +281,13 @@ class Game:
             if inc != 0:
                 self.set_pose(Vector3(0.0, current_pos + inc, 0.0))
 
-    def set_initial_pose(self, initial_y = 0):
+    def set_initial_pose(self, initial_y_per = 0.5):
+        min_lim = max_sawyer_left
+        max_lim = max_sawyer_right
+        initial_y = min_lim + initial_y_per * (max_lim - min_lim)
         goal_vec = Vector3(0.0, initial_y, 0.0)
         self.set_pose(goal_vec, False)
+        return initial_y
 
     def add_obstacle(self, size = [0.60, 1.0, 0.10], x = .15, y=0, z=0.75):
         table_size = np.array(size)

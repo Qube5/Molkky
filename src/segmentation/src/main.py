@@ -66,12 +66,16 @@ def numpy_to_img_msg(img):
 def dict_to_img_info_msg(info):
     cluster_colors = info["cluster_colors"]
     cluster_centers = info["cluster_centers"]
+    cluster_colors_keys = list(cluster_colors.keys())
+    cluster_centers_keys = list(cluster_centers.keys())
+    cluster_colors_keys.sort()
+    cluster_centers_keys.sort()
 
-    rs = [ cluster_colors[key][0] for key in cluster_colors.keys()]
-    gs = [ cluster_colors[key][1] for key in cluster_colors.keys()]
-    bs = [ cluster_colors[key][2] for key in cluster_colors.keys()]
-    xs = [cluster_centers[key][0] for key in cluster_centers.keys()]
-    ys = [cluster_centers[key][1] for key in cluster_centers.keys()]
+    rs = [ cluster_colors[key][0] for key in cluster_colors_keys]
+    gs = [ cluster_colors[key][1] for key in cluster_colors_keys]
+    bs = [ cluster_colors[key][2] for key in cluster_colors_keys]
+    xs = [cluster_centers[key][0] for key in cluster_centers_keys]
+    ys = [cluster_centers[key][1] for key in cluster_centers_keys]
 
     image_info = ImageInfo(rs, gs, bs, xs, ys)
 
@@ -108,6 +112,7 @@ class PointcloudProcess:
         ts.registerCallback(self.callback)
 
     def callback(self, points_msg, image, info):
+        print("callback")
         try:
             intrinsic_matrix = get_camera_matrix(info)
             rgb_image = ros_numpy.numpify(image)
@@ -166,6 +171,8 @@ class PointcloudProcess:
             # points = segment_pointcloud(points, segmented_image_binary, cam_matrix,
             #     np.array(trans), np.array(rot))
             return info, segmented_image, segmented_image_binary
+        else: 
+            print('no message')
 
 
 

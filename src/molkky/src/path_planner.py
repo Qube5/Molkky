@@ -164,7 +164,20 @@ class PathPlanner(object):
 
         self._planning_scene_publisher.publish(co)
 
-def set_pose(goal_vec):
+def set_initial_pose():
+    y_per = 0.5
+    y_des = min_lim + y_per * (max_lim - min_lim)
+
+    goal_vec = Vector3(0.0, y_des, 0.0)
+    set_pose(goal_vec, False)
+
+def set_pose_incrementally(goal_vec, current_pos):
+    goal_pos = goal_vec.y
+    for inc in np.linspace(0, goal_pos-current_pos, num=3, endpoint=True):
+        if inc != 0:
+            set_pose(Vector3(0.0, current_pos + inc, 0.0))
+
+def set_pose(goal_vec, obstacles = True):
     planner = PathPlanner("right_arm") # MoveIt path planning class
 
 
@@ -254,8 +267,11 @@ if __name__ == '__main__':
     y_per = float(raw_input("Enter desired y percentage (0, 1): \n"))
 
     # interpolate percentage between -0.5 and 0.3
-    min_lim = -0.2
-    max_lim = 0.5
+    # min_lim = -0.2
+    # max_lim = 0.5
+    min_lim = 0
+    max_lim = 0.4
+
     y_des = min_lim + y_per * (max_lim - min_lim)
 
     # set_pose(Vector3(0.0, y_goal, 0.0))
